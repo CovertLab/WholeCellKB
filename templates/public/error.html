@@ -1,0 +1,54 @@
+{% extends "public/base.html" %}
+
+{% comment %}
+Error template
+
+Author: Jonathan Karr, jkarr@stanford.edu
+Affiliation: Covert Lab, Department of Bioengineering, Stanford University
+Last updated: 2012-07-17
+{% endcomment %}
+
+{% block extrastyles %}
+#error{
+	width:100%;
+	margin:0px;
+	padding:0px;
+	border:1px solid #306EFF;
+	border-radius:6px;
+}
+#error h1{
+	margin:0px;
+	padding:2px;
+	font-size:12px;
+	font-weight:bold;
+	color:white;
+	background:#306EFF;
+	border-top-left-radius:6px;
+	border-top-right-radius:6px;
+}
+#error .content{
+	padding:2px;
+	color:red;
+	font-style:italic;
+}
+@media print{
+	#error{
+		border:none;
+	}	
+	#error h1{
+		color:black;
+		background-color:transparent;
+	}
+	#error .content{
+		color:black;
+		font-style:normal;
+	}
+}
+{% endblock %}
+
+{% block content %}
+<div id="error">
+	<h1>Error {{ type }}</h1>
+	<div class="content">{{ message }}</div>
+</div>
+{% endblock %}

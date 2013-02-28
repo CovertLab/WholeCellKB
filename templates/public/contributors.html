@@ -1,0 +1,61 @@
+{% extends "public/base.html" %}
+
+{% comment %}
+Contributors list template
+
+Author: Jonathan Karr, jkarr@stanford.edu
+Affiliation: Covert Lab, Department of Bioengineering, Stanford University
+Last updated: 2012-07-17
+{% endcomment %}
+
+{% load static %}
+{% load templatetags %}
+
+{% block head_title %}{{ block.super }} :: Contributors{% endblock %}
+{% block page_title %}Contributors{% endblock %}
+
+{% block action_icons %}
+{% if not request.user.is_anonymous %}
+<a href="{% url admin:auth_user_add %}"><img src="{% get_static_prefix %}public/img/add.png" title="Add" alt="Add" /></a>
+{% endif %}
+{{ block.super }}
+{% endblock %}
+
+{% block extrastyles %}
+#list{
+	width:100%;
+}
+{% endblock %}
+
+{% block content %}
+{{ queryset.length }}
+<table id="list">
+<thead>
+	<tr>
+		<th>Name</th>
+		<th>Affiliation</th>
+		{% if not request.user.is_anonymous %}
+		<th>&nbsp;</th>
+		{% endif %}
+	</tr>
+</thead>
+<tbody>
+	{% for object in queryset %}
+	{% with profile=object.get_profile %}
+	<tr>
+		<th><a href="{{ object.get_absolute_url }}/{{ species.wid }}">{{ object.first_name }}&nbsp;{{ object.last_name }}</a></th>
+		<td><a href="{{ object.get_absolute_url }}/{{ species.wid }}">{{ profile.affiliation|truncatechars:80 }}</a></td>
+		{% if not request.user.is_anonymous %}
+		<td>
+			<a href="{% url admin:auth_user_change object.pk %}"><img src="{% get_static_prefix %}public/img/pencil.png" title="Edit" alt="Edit" /></a>
+			<a href="{% url admin:auth_user_delete object.pk %}"><img src="{% get_static_prefix %}public/img/delete.png" title="Delete" alt="Delete" /></a>
+		</td>
+		{% endif %}
+	</tr>
+	{% endwith %}
+	{% endfor %}
+</tbody>
+</table>
+
+<div style="clear:both;"></div>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "public/base.html" %}
+
+{% comment %}
+List template
+
+Author: Jonathan Karr, jkarr@stanford.edu
+Affiliation: Covert Lab, Department of Bioengineering, Stanford University
+Last updated: 2012-07-17
+{% endcomment %}
+
+{% load static %}
+
+{% block head_title %}{{ block.super }} :: Validate KB{% endblock %}
+{% block page_title %}Validate KB{% endblock %}
+
+{% block extrastyles %}
+#list{
+	width:100%;
+}
+{% endblock %}
+
+{% block content %}
+{% if errors|length == 0 %}
+Knowledge base valid!
+{% else %}
+<table id="list">
+<thead>
+	<tr>
+		<th>WID</th>
+		<th>Errors</th>
+		{% if not request.user.is_anonymous %}
+		<th>&nbsp;</th>
+		{% endif %}
+	</tr>
+</thead>
+<tbody>
+	{% for error in errors %}
+	<tr>
+		<th><a href="{{ error.url }}">{{ error.name }}</a></th>
+		<td><a href="{{ error.url }}">{% autoescape off %}{{ error.message }}{% endautoescape %}</a></td>		
+		{% if not request.user.is_anonymous %}
+		<td>
+			{% if error.type == 'object' %}
+			<a href="{% url public.views.edit species_wid=species.wid wid=error.name %}"><img src="{% get_static_prefix %}public/img/pencil.png" /></a>
+			<a href="{% url public.views.delete species_wid=species.wid wid=error.name %}"><img src="{% get_static_prefix %}public/img/delete.png" /></a>
+			{% else %}
+			&nbsp;
+			{% endif %}
+		</td>
+		{% endif %}
+	</tr>
+	{% endfor %}
+</tbody>
+</table>
+{% endif %}
+{% endblock %}

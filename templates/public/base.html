@@ -1,0 +1,200 @@
+{% comment %}
+Base template
+
+Author: Jonathan Karr, jkarr@stanford.edu
+Affiliation: Covert Lab, Department of Bioengineering, Stanford University
+Last updated: 2012-07-17
+{% endcomment %}
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="{{ LANGUAGE_CODE|default:"en-us" }}" xml:lang="{{ LANGUAGE_CODE|default:"en-us" }}" {% if LANGUAGE_BIDI %}dir="rtl"{% endif %}>
+{% load static %}
+{% load templatetags %}
+<head>
+	{% block head %}
+	<!-- meta data -->
+	<title>{% block head_title %}WholeCellKB{% endblock %}</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta http-equiv="Content-Language" content="en-us" />
+	<meta http-equiv="Cache-Control" content="NO-CACHE" />
+	<meta http-equiv="Pragma" content="NO-CACHE" />
+	<meta name="description" content="Comprehensive knowledge base of cell physiology." />
+	<meta name="keywords" content="cell, systems, biology, computational, database, modeling" />
+	<meta name="author" content="Covert Lab, Stanford University" />
+	<meta name="revised" content="2012" />
+	<meta name="copyright" content="&copy; Covert Lab, Stanford University 2008-2012" />
+	<meta name="google-site-verification" content="Vdho9XJAyUBzyApnbEsjy8m6CsLjNEI12c8wqVVpsS8" />
+	
+	{% if species %}
+	<meta name="species_wid" content="{{ species.wid }}" />
+	<meta name="species_name" content="{{ species.name }}" />
+	{% endif %}	
+	
+	<!-- style -->
+	{% if not is_pdf %}
+	<link rel="stylesheet" type="text/css" media="all" href="{% get_static_prefix %}public/css/jquery-ui-1.8.23.custom.css" />
+	<link rel="stylesheet" type="text/css" media="all" href="{% get_static_prefix %}public/css/PTSans.min.css" />
+	{% endif %}
+	<link rel="stylesheet" type="text/css" media="all" href="{% get_static_prefix %}public/css/styles.css" />		
+	<link rel="stylesheet" type="text/css" media="print" href="{% get_static_prefix %}public/css/styles.print.css" />
+	<style type="text/css" media="print">
+	{{ pdfstyles }}
+	</style>
+	<style type="text/css" media="all">{% block extrastyles %}{% endblock %}</style>
+	
+	<!-- favicon -->
+	<link rel="icon" type="image/png" href="{% get_static_prefix %}public/favicon.ico">	
+	
+	<!-- javascript -->
+	<script language="javascript" type="text/javascript" src="{% get_static_prefix %}public/js/jquery-1.8.0.min.js"></script>
+	<script language="javascript" type="text/javascript" src="{% get_static_prefix %}public/js/jquery-ui-1.8.23.custom.min.js"></script>
+	<script language="javascript" type="text/javascript" src="{% get_static_prefix %}public/js/flot/jquery.flot.min.js"></script>
+	<script language="javascript" type="text/javascript" src="{% get_static_prefix %}public/js/flot/jquery.flot.axislabels.min.js"></script>
+	<script language="javascript" type="text/javascript" src="{% get_static_prefix %}public/js/flot/jquery.flot.pie.min.js"></script>
+	<!–[if lte IE 8]>
+	<script language="javascript" type="text/javascript" src="{% get_static_prefix %}public/js/flot/excanvas.min.js"></script>
+	<![endif]–>
+	<script language="javascript" type="text/javascript" src="{% get_static_prefix %}public/js/evidence.js"></script>
+	<script language="javascript" type="text/javascript" src="{% get_static_prefix %}public/js/tooltip.js"></script>
+	
+	<!-- google analytics -->
+	<script type="text/javascript">
+	var _gaq = _gaq || [];
+	_gaq.push(['_setAccount', 'UA-34992113-1']);
+	_gaq.push(['_trackPageview']);
+
+	(function() {
+	var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+	ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+	var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+	})();
+	</script>
+	{% endblock %}
+</head>
+<body>
+	<!-- header -->
+	<div id="header" class="ui-widget-header">
+		<div class="title"><a href="{% if species %}{% url public.views.index species_wid=species.wid %}{% else %}{% url public.views.index %}{% endif %}">{{ species.name }}</a></div>
+		<div class="banner"><a href="{% if species %}{% url public.views.index species_wid=species.wid %}{% else %}{% url public.views.index %}{% endif %}"><img src="{% get_static_prefix %}public/img/banner.png" /></a></div>
+		<div class="search">
+			{% if species %}
+			<form name="search" action="{% url public.views.search species_wid=species.wid %}" method="get">
+				<table cellpadding="0" cellspacing="0">
+				<tr>
+					<td><input name="q" type="text" 
+						{% if not engine %}
+						class="text text-default" value="Enter search term(s)" onclick="this.value = ''; this.className='text';"
+						{% else %}
+						class="text" value="{{ query }}"
+						{% endif %}
+						/></td>
+					<td><a href="javascript:document.search.submit()"><img src="{% get_static_prefix %}public/img/magnifier.png" /></a></td>
+				</tr>
+					<td class="engine">
+						<input type="radio" name="engine" value="haystack" {% if not engine or engine == 'haystack' %} checked="true" {% endif %}/><span>WholeCellKB</span>
+						<input type="radio" name="engine" value="google" {% if engine == 'google' %} checked="true" {% endif %}/><span>Google</span>
+					</td>
+					<td></td>
+				</table>
+			</form>
+			{% endif %}
+		</div>
+		
+		<ul class="menu">
+			<li><a href="#">Home</a>
+				<ul>
+				{% for species in species_list %}
+				<li><a href="{{ species.get_absolute_url }}"><i>{{ species.name }}</i></a></li>
+				{% endfor %}
+				</ul>
+			</li>
+			<li class="spacer"/>
+			<li><a href="#">Browse</a>
+				<ul>
+				{% if species %}
+				{% for key1 in modelnames %}
+					{% for key2, modelmetadata in modelmetadatas.iteritems %}
+						{% if key1 == key2 %}
+					<li><a href="{% url public.views.list species_wid=species.wid model_type=key2 %}">{{ modelmetadata.verbose_name_plural }}</a></li>
+						{% endif %}
+					{% endfor %}
+				{% endfor %}
+				{% endif %}
+				</ul>
+			</li>
+			<li class="spacer"/>
+			<li><a href="#">Download</a>
+				<ul>
+				<li><a href="{% if species %}{% url public.views.exportData species_wid=species.wid %}{% else %}{% url public.views.exportData %}{% endif %}">Data</a></li>
+				<li><a href="https://simtk.org/project/xml/downloads.xml?group_id=714#package_id1290">Source code</a></li>
+				</ul>
+			</li>
+			{% if request.user.is_authenticated %}
+			<li class="spacer"/>
+			<li><a href="{% if species %}{% url public.views.importData species_wid=species.wid %}{% else %}{% url public.views.importData %}{% endif %}">Import</a></li>
+				{% if species %}
+			<li class="spacer"/>
+			<li><a href="{% url public.views.validate species_wid=species.wid %}">Validate</a></li>
+				{% endif %}
+			<li class="spacer"/>
+			<li><a href="{% if species %}{% url public.views.contributors species_wid=species.wid %}{% else %}{% url public.views.contributors %}{% endif %}">Contributors</a></li>
+			{% endif %}
+			<li class="spacer"/>
+			<li><a href="#">Help</a>
+				<ul>
+				<li><a href="{% if species %}{% url public.views.tutorial species_wid=species.wid %}{% else %}{% url public.views.tutorial %}{% endif %}">Getting started</a></li>				
+				<li><a href="{% if species %}{% url public.views.about species_wid=species.wid %}{% else %}{% url public.views.about %}{% endif %}#downloading_content">Downloading data</a></li>
+				<li><a href="{% if species %}{% url public.views.about species_wid=species.wid %}{% else %}{% url public.views.about %}{% endif %}#api">RESTful API</a></li>				
+				<li><a href="{% if species %}{% url public.views.about species_wid=species.wid %}{% else %}{% url public.views.about %}{% endif %}#editing">Editing KB content</a></li>
+				<li><a href="{% if species %}{% url public.views.about species_wid=species.wid %}{% else %}{% url public.views.about %}{% endif %}#data_model">Data model</a></li>
+				<li><a href="{% if species %}{% url public.views.about species_wid=species.wid %}{% else %}{% url public.views.about %}{% endif %}#developing">Creating and customizing<div style="padding-left:10px;">new model organism<br/>databases</div></a></li>
+				<li><a href="{% if species %}{% url public.views.about species_wid=species.wid %}{% else %}{% url public.views.about %}{% endif %}#modeling">Developing whole-cell<div style="padding-left:10px;">models</div></a></li>
+				<li><a href="{% get_static_prefix %}public/doc/">Source code docs</a></li>
+				<li><a href="{% if species %}{% url public.views.about species_wid=species.wid %}{% else %}{% url public.views.about %}{% endif %}">About</a></li>
+				<li><a href="{% if species %}{% url public.views.about species_wid=species.wid %}{% else %}{% url public.views.about %}{% endif %}#contact">Contact</a></li>
+				</ul>
+			</li>
+			{% if request.user.is_authenticated %}
+			<li class="spacer"/>
+			<li><a href="{% if species %}{% url public.views.logout species_wid=species.wid %}{% else %}{% url public.views.logout %}{% endif %}">Logout</a></li>
+			{% else %}
+			<li class="spacer"/>
+			<li><a href="{% if request.get_full_path|truncatechars:9 == '/login...' %}{{ request.get_full_path }}{% else %}{% if species %}{% url public.views.login species_wid=species.wid %}{% else %}{% url public.views.login %}{% endif %}?next={{ request.get_full_path|urlencode }}{% endif %}">Login</a></li>
+			{% endif %}
+		</ul>
+	</div>
+		
+	<div id="main">
+		<!-- content -->
+		<div id="content">
+		<h1>{% block page_title %}{% endblock %}</h1>
+		{% block content %}{% endblock %}		
+		</div>
+	</div>
+		
+	<!-- footer -->
+	<div id="footer" class="ui-widget-header">
+		<div class="left">
+		</div>
+		
+		<div class="center">			
+			Last updated {{ last_updated_date }}. Contact <a href="mailto:wholecell@lists.stanford.edu">wholecell@lists.stanford.edu</a>.<br/> 
+			&copy; <a href="http://covertlab.stanford.edu">Covert Lab</a>, <a href="http://www.stanford.edu">Stanford University</a> 2008-2012.		
+		</div>
+		
+		<div class="right">
+			{% block action_icons %}			
+			<a href="?{% makeurl queryargs 'format' 'pdf' %}"><img src="{% get_static_prefix %}public/img/page_white_acrobat.png" /></a>
+			<a href="javascript:window.print()"><img src="{% get_static_prefix %}public/img/printer.png" /></a>
+			{% endblock %}
+		</div>
+	</div>	
+	
+	<!-- modal -->
+	<div id="modal"></div>
+	
+	<!-- tooltip -->
+	<div id="tooltip" class="ui-widget-header ui-corner-all"></div>
+</body>
+</html>

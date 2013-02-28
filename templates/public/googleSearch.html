@@ -1,0 +1,32 @@
+{% extends "public/base.html" %}
+
+{% comment %}
+Search template
+
+Author: Jonathan Karr, jkarr@stanford.edu
+Affiliation: Covert Lab, Department of Bioengineering, Stanford University
+Last updated: 2012-07-17
+{% endcomment %}
+
+{% load static %}
+{% load templatetags %}
+
+{% block head %}
+{{ block.super }}
+<script>
+  (function() {
+    var cx = '005713974021659712118:dvmnzzjxkfo';
+    var gcse = document.createElement('script'); gcse.type = 'text/javascript'; gcse.async = true;
+    gcse.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') +
+        '//www.google.com/cse/cse.js?cx=' + cx;
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(gcse, s);
+  })();
+</script>
+{% endblock %}
+{% block head_title %}{{ block.super }} :: Search :: "{{ query }}"{% endblock %}
+{% block page_title %}Search :: "{{ query }}"{% endblock %}
+{% block action_icons %}{% endblock %}
+
+{% block content %}
+<gcse:searchresults-only></gcse:searchresults-only> 
+{% endblock %}

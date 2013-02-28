@@ -1,0 +1,296 @@
+{% extends "public/base.html" %}
+
+{% comment %}
+About page
+
+Author: Jonathan Karr, jkarr@stanford.edu
+Affiliation: Covert Lab, Department of Bioengineering, Stanford University
+Last updated: 2012-07-17
+{% endcomment %}
+
+{% load static %}
+
+{% block head_title %}{{ block.super }} :: About{% endblock %}
+
+{% block extrastyles %}
+#content h1{
+	margin-bottom:2px;
+}
+.logo{
+	width:100%;
+	text-align:center;
+}
+.logo img{
+	margin-bottom:0px;
+}
+@media print{
+	.logo{
+		display:none;
+	}
+}
+
+#content ul{
+	margin-top:-6px;
+	padding-top:0px;
+}
+#content ul.download_formats{
+	margin-top:-4px;
+}
+#content ul.download_formats li{
+	margin-top:2px;
+}
+#content ul.download_formats ul li{
+	margin-top:0px;
+}
+
+#content .variable{
+	font-style:italic;
+	color:grey;
+}
+
+.inline-icon{
+	position:relative;
+	top:4px;
+}
+
+{% endblock %}
+
+{% block content %}
+<div class="logo">
+	<img src="{% get_static_prefix %}public/img/logo-2.png" />
+</div>
+
+<h1>About</h1>
+
+<div><h2><a name="intro"></a>Introduction</h2>
+<p>WholeCellKB is a collection of free model organism databases designed specifically to enable comprehensive, dynamic simulations of entire cells and organisms. WholeCellKB provides comprehensive, quantitative descriptions of individual species including
+<ul>
+<li>Their subcellular organization,</li>
+<li>Their chromosome sequences,</li>
+<li>The essentiality, location, length, direction, and homologs of each gene,</li>
+<li>The organization and promoter of each transcription unit,</li>
+<li>The expression and degradation rate of each RNA gene product,</li>
+<li>The specific folding and maturation pathway of each RNA and protein species including the localization, N-terminal cleavage, signal sequence, prosthetic groups, disulfide bonds, and chaperone interactions of each protein species,</li>
+<li>The subunit composition of each macromolecular complex,</li>
+<li>Their genetic code,</li>
+<li>The binding sites and footprint of every DNA-binding protein,</li>
+<li>The structure, charge, and hydrophobicity of every metabolite,</li>
+<li>The stoichiometry, catalysis, coenzymes, energetics, and kinetics of every chemical reaction,</li>
+<li>The regulatory strength of each transcription factor on each promoter,</li>
+<li>Their chemical composition, and</li>
+<li>The composition of its typical SP-4 laboratory growth medium.</li>
+</ul></p>
+
+<p>WholeCellKB currently contains a single database of <i>Mycoplasma genitalium</i>, an extremely small gram-positive bacterium and common human pathogen. This database is the most comprehensive description of any single organism to date, and was used to develop the first whole-cell computational model.</p>
+</div>
+
+<div><h2><a name="comparison"></a>Comparison to existing databases</h2>	
+<p>WholeCellKB has several major differences from previous databases such as <a href="http://www.biocyc.org">BioCyc</a> and <a href="http://bigg.ucsd.edu/">BiGG</a>. First, WholeCellKB was designed to represent every cellular process including well-studied processes such as metabolism as well as less well-understood processes such as DNA damage and repair and RNA and protein degradation.</p>
+
+<p>Second, whole-cell modeling requires model organism databases which explicitly define the participants of each molecular interaction and chemical reaction. WholeCellKB addresses this need by representing the specific molecules involved in every molecular interaction and by requiring structures for each molecule. For example, WholeCellKB represents the specific RNA and protein species involved in every RNA and protein modification reaction and the specific proteins folded by each molecular chaperone. In comparison, most previous databases only explicitly represent metabolic and transcriptional regulatory interactions.</p>
+
+<p>Third, where available WholeCellKB contains not only structural, but also quantitative functional descriptions of each molecule and molecular interaction. For example, WholeCellKB contains chemical reaction rate laws and kinetic parameters, RNA transcript expressions and half-lives, and cellular and growth medium chemical compositions.</p>
+</div>
+
+<div><h2><a name="curation"></a>Curation</h2>
+<p>The <i>M. genitalium</i> database was curated according to six principals:
+<ul>
+<li><i>Species specificity</i>: where possible we based the database on research conducted in <i>M. genitalium</i>.</li>
+<li><i>Comprehensiveness</i>: to develop a fully comprehensive database, where necessary we curated <i>M. genitalium</i> based on studies of close relatives such as <i>E. coli</i> and <i>Bacillus subtilis</i>. We determined homology by bi-direction best BLAST.</li>
+<li><i>Accuracy</i>: where possible we catalogued multiple relevant research reports and based our annotation on the consensus of these reports.</li>
+<li><i>Molecular specificity</i>: each piece of information was annotated to a specific molecule or set of molecules, each with a defined chemical structure.</li>
+<li><i>Quantitativeness</i>: where possible we curated the numerical properties of each molecular and molecular interaction including for example, the thermodynamics and kinetics of each chemical reaction.</li>
+<li><i>Transparency</i>: we catalogued the source of every piece of information as well as the researcher who curated it and when.</li>
+</ul></p>
+
+<p>The <i>M. genitalium</i> database was curated from over 900 primary research articles, reviews, books, and databases over four years by a team of researchers at Stanford University.</p>
+
+<p>First, we curated the overall structure of <i>M. genitalium</i> including its size, shape, subcellular organization, and chemical composition based on several experimental studies including <a href="http://www.ncbi.nlm.nih.gov/pubmed/14476188">Morowitz <i>et al.</i>, 1962</a>. We also curated the chemical composition of mycoplasma laboratory growth medium to the level of specific metabolite species based on analyses provided by <a href="http://www.solabia.com/">Solabia</a>.</p>
+
+<p>Second, we curated the structure of the <i>M. genitalium</i> chromosome including its sequence, the location, length, and direction of each gene and its transcription unit organization based on the <a href="http://cmr.jcvi.org/">Comprehensive Microbial Resource</a. (CMR) annotation  and a recently study by <a href="http://www.ncbi.nlm.nih.gov/pubmed/19965477">G&#x00FC;ell <i>et al.</i></a>, 2009. We curated the location of each promoter and the expression, degradation rate, and essentiality of each gene product from studies by <a href="http://www.ncbi.nlm.nih.gov/pubmed/11071937">Weiner <i>et al.</i>, 2000</a>, <a href="http://www.ncbi.nlm.nih.gov/pubmed/14576319">Weiner <i>et al.</i>, 2003</a>, <a href="http://www.ncbi.nlm.nih.gov/pubmed/12119387">Bernstein <i>et al.</i>, 2002</a>, and <a href="http://www.ncbi.nlm.nih.gov/pubmed/16407165">Glass <i>et al.</i>, 2006</a>, respectively. We curated DNA-binding protein binding sites and transcriptional regulatory interactions from several sources including <a href="http://dbtbs.hgc.jp/">DBTBS</a>.</p>
+
+<p>Third, we curated the structure of each RNA and protein gene product. We curated the post-transcriptional processing and modification of each RNA transcript from several sources including <a href="http://dspace.utlib.ee/dspace/handle/10062/10503">Peil, 2009</a>. We curated the signal sequence, localization, chaperone-mediated folding, post-translational modification, disulfide bonds, subunit composition, and DNA footprint of each protein and macromolecular complex from a large number of primary research articles, computational models, and databases. We curated the chemical regulation of each gene product from several sources including <a href="http://www.drugbank.ca/">DrugBank</a>. We used <a href="http://web.expasy.org/protparam/">ExPASy ProtParam</a> to calculate the pI, extinction coefficient, half-life, instability index, aliphatic index, and grand average of hydropathy of every protein species.</p>
+
+<p>Fourth, we curated the specific chemical reactions catalyzed by each gene product starting from the CMR, <a href="http://www.ncbi.nlm.nih.gov/genbank/">GenBank</a>, <a href="http://www.genome.jp/kegg/">KEGG</a>, and <a href="http://www.uniprot.org/">UniProt</a> genome annotations and the RNA and protein maturation pathways we had already curated. To maximize the scope of the database and to fill gaps in the genome annotation we expanded each gene product's annotation based on primary research articles we identified by systematically searching <a href="PubMed">PubMed</a> and <a href="http://scholar.google.com">Google Scholar</a> for each gene and its homologs. We consulted <a href="http://www.biocyc.org/">BioCyc</a>, KEGG, two flux-balance analysis models of bacterial metabolism, hundreds of additional primary research articles to curate the stoichiometry of each chemical reaction. We curated the thermodynamics and kinetics of each chemical reaction from several databases including <a href="BRENDA">BRENDA</a>, <a href="http://sabio.villa-bosch.de/">SABIO-RK</a>, and UniProt.</p>
+
+<p>Lastly, we curated the <i>M. genitalium</i> metabolome. We included any metabolite involved in any curated reaction or molecular interaction as well as any metabolite present in <i>M. genitalium</i> biomass or in typical mycoplasma growth medium. We curated the empirical formula, structure, and charge of each metabolite based on several databases including BioCyc and <a href="http://pubchem.ncbi.nlm.nih.gov/">PubChem</a>. We used <a href="http://www.chemaxon.com/products/marvin">ChemAxon Marvin</a> to calculate the molecular weight, volume, pI, log<sub>d</sub> and log<sub>p</sub> of each metabolite.</p>
+
+<p>The supplementary information to <a href="#citing">Karr <i>et al.</i>, 2012</a> provides a detailed discussion of the curation process and sources.</p>
+</div>
+
+<div><h2><a name="versioning"></a>Versioning</h2>
+WholeCellKB separately versions each entry. Each entry's page displays two properties: <i>created</i> and <i>last updated</i> which indicate each entry's version history. Similarly, entries exported from WholeCellKB contain two properties <i>created_date</i> and <i>last_updated_date</i>.</div>
+
+<div><h2><a name="implementation"></a>Implementation</h2>
+<p>WholeCellKB was specifically designed to enable modelers to organize and structure all of the molecular data required for whole-cell dynamical models. WholeCellKB was designed with five major principals: 
+<ul>
+<li><i>Rapid curation</i>: enable modelers to rapidly curate data by providing user-friendly interfaces for single as well as batch editing,</li>
+<li><i>Collaboration</i>: enables modelers to collaboratively curate data through a user-friendly web interface,</li>
+<li><i>Computability</i>: enable modelers to make data readily computable by making the data model easy to expand and edit,</li>
+<li><i>Traceability</i>: enable modelers to annotate the primary source of each piece of data,</li>
+<li><i>Transparency</i>: enable modelers to rapidly develop user-friendly interfaces similar to that of other model organism databases for themselves as well as other scientists to easily browse, search, and export the data, and</li>
+<li><i>Customization</i>: enable modelers to rapidly develop custom data models and views.</li>
+</ul></p>
+
+<p>As described above, the goal of WholeCellKB is to enable modelers to rapidly develop the databases needed to build whole-cell models. Consequently, we chose to implement WholeCellKB in Python using the <a href="http://www.djangoproject.com">Django</a> web framework. This design enables modelers to rapidly develop custom data models and validation without any knowledge of relational database design or SQL and minimal programming. This design also allows WholeCellKB to provide modelers generic views for editing, batch editing, and exporting WholeCellKB entries, further enabling modelers to rapidly develop databases. Because WholeCellKB is built on top of Python, modelers can also easily perform scientific calculations on WholeCellKB entries using SciPy, NumPy, and Biopython for data validation and simulation. Furthermore, these theoretical calculations can easily be displayed alongside curated data in the WholeCellKB user interface.</p>
+
+<p>WholeCellKB was implemented entirely with free, open-source software. WholeCellKB runs on <a href="http://www.apache.org">Apache</a>, an open-source web server using the open-source module <a href="http://code.google.com/p/modwsgi">mod_wsgi</a>. WholeCellKB is stored using the open-source relational database <a href="http://www.mysql.com">MySQL</a>. Full text search was implemented using the open-source libraries <a href="http://haystacksearch.org">Haystack</a> and <a href="http://xapian.org">Xapian</a>. Batch Excel import and export were implemented using <a href="http://bitbucket.org/ericgazoni/openpyxl">OpenPyXL</a>. The RESTful JSON and XML interfaces were implemented using <a href="http://pypi.python.org/pypi/simplejson">simplejson</a> and <a href="http://docs.python.org/library/xml.dom.html">xml.dom</a>. PDF export was implemented using <a href="http://www.xhtml2pdf.com">xhtml2pdf</a>. Several bioinformatics calculations were implemented using <a href="http://biopython.org">Biopython</a>.</p>
+
+<p>Documentation for the source code is available <a href="{% get_static_prefix %}public/doc">here</a>. Additional documentation for the data model is available <a href="#data_model">below</a>.</p>
+</div>
+
+<div><h2><a name="data_model"></a>Data model</h2>
+<p>The WholeCellKB data model is composed of {{ modelnames|length }} types of entries:
+<ul>
+{% for modelname in modelnames %}
+<li><tt>{{ modelname }}</tt></li>
+{% endfor %}
+</ul>
+</p>
+
+<p>Each type of entry is implemented by a distinct Python class by the same name derived from the <tt>Entry</tt> class. The <tt>Entry</tt> class provides five properties:
+<ul>
+<li><tt>wid</tt>: unicode identifier for entry. wid's are unique within a species.</li>
+<li><tt>name</tt>: unicode representing the name of each entry.</li>
+<li><tt>comments</tt>: unicode representing comments for each entry.</li>
+<li><tt>created_date</tt>: datetime when the entry was created.</li>
+<li><tt>last_updated_date</tt>: datetime when the entry was last updated.</li>
+</ul></p>
+	
+<p>Through the <tt>CrossReference</tt>, <tt>Synonym</tt>, and <tt>User</tt> classes, all entries also contain lists of cross-references to other databases, synonyms, and the identity of the users who created and last updated each entry. The Python classes for each entry type add additional properties.</p>
+
+<p>In addition to the <tt>Entry</tt> subclasses which represent WholeCellKB entries, the WholeCellKB data model contains a second type of class derived from the <tt>EntryData</tt> superclass. These classes do not correspond to WholeCellKB entries, but rather are used to encode relationships among WholeCellKB entries.</p>
+
+<p>The diagram below shows the WholeCellKB data model. Click the diagram of the link <a href="{% get_static_prefix %}public/img/data_model.svg">here</a> for a high-resolution version. See also the <a href="{% get_static_prefix %}public/doc">source code documentation</a>.</p>
+<p><a href="{% get_static_prefix %}public/img/data_model.svg"><img src="{% get_static_prefix %}public/img/data_model.png" alt="Data model" width="100%"/></a></p>
+</div>
+
+<div><h2><a name="api"></a>RESTful API</h2>
+<p>WholeCellKB is also accessible via a RESTful API which mirrors the content of every HTML page in Bib, JSON, PDF, and XML formats. See <a href="#downloading_content">below</a> for further information about the available export formats. Please use the following URL patterns to access the API with the <span class="variable">format</span> query argument set to one of "bib", "json", "pdf", or "xml".
+<ul class="restful-examples">
+<li>Individual entries:
+	<br/>{{ ROOT_URL }}/detail/<span class="variable">SpeciesWID</span>/<span class="variable">EntryWID</span>?format=<span class="variable">Format</span>
+	<br/><a href="{{ ROOT_URL }}/detail/{{ species.wid }}/AtpA?format=json">{{ ROOT_URL }}/detail/{{ species.wid }}/ATP?format=json</a></li>
+<li>Lists of entries:
+	<br/>{{ ROOT_URL }}/list/<span class="variable">SpeciesWID</span>/<span class="variable">EntryType</span>?format=<span class="variable">Format</span>
+	<br/><a href="{{ ROOT_URL }}/list/{{ species.wid }}/Reaction?format=json">{{ ROOT_URL }}/list/{{ species.wid }}/Reaction?format=json</a></li>
+<li>Complete knowledge bases:
+	<br/>{{ ROOT_URL }}/export/<span class="variable">SpeciesWID</span>?all_model_types=True&format=<span class="variable">Format</span>
+	<br/><a href="{{ ROOT_URL }}/export/{{ species.wid }}?all_model_types=True&format=json">{{ ROOT_URL }}/export/{{ species.wid }}/?all_model_types=True&format=json</a></li>
+<li>Full-text searches:
+	<br/>{{ ROOT_URL }}/search/<span class="variable">SpeciesWID</span>?q=<span class="variable">QueryString</span>&format=<span class="variable">Format</span>
+	<br/><a href="{{ ROOT_URL }}/search/{{ species.wid }}?q=ATP&format=json">{{ ROOT_URL }}/search/{{ species.wid }}/?q=ATP&format=json</a></li>
+</ul>
+</p>
+
+<p>Allowed values for the URL fragment <span class="variable">SpeciesWID</span> include:
+<ul>
+{% for species in species_list %}
+<li>{{ species.wid }}</li>
+{% endfor %}
+</ul>
+</p>
+
+<p>The allowed values for the URL fragment <span class="variable">EntryWID</span> are marked at the top of each entry page with the label "WID". Below are several examples of valid <span class="variable">EntryWID</span>s:
+<ul>
+<li>Gene: MG_001</li>
+<li>Metabolite: ATP</li>
+<li>Reaction: AtpA</li>
+<li>Reference: PUB_0001</li>
+<li>Transcription unit: TU_001</li>
+</ul>
+</p>
+
+<p>Allowed values for the URL fragment <span class="variable">EntryType</span> include:
+<ul>
+{% for modelname in modelnames %}
+<li>{{ modelname }}</li>
+{% endfor %}
+</ul>
+</p>
+
+<p>Finally, the URL fragment <span class="variable">QueryString</span> can be set to any string.</p>
+
+</p>
+</div>
+
+<div><h2><a name="editing"></a>Editing WholeCellKB</h2>
+<p>We welcome additions and corrections to the version of WholeCellKB at <a href="{{ ROOT_URL }}">{{ ROOT_URL }}</a>. Click the <img src="{% get_static_prefix %}public/img/pencil.png" class="inline-icon" alt="pencil"/> icon located at the bottom-right corner of most pages to email us additions and corrections to WholeCellKB.</p>
+
+<p>Alternatively, you can download the WholeCellKB source code and content to create and customize &ndash; including the content, data model, and user interface &ndash; your own model organism database. After you've installed and logged into your own version of WholeCellKB, the <img src="{% get_static_prefix %}public/img/pencil.png" class="inline-icon" alt="pencil"/> icons will direct you to web-forms which will enable to you to edit your model organism databases. Additionally, after you've logged in you will have access to a <a href="{% if species %}{% url public.views.importData species_wid=species.wid %}{% else %}{% url public.views.importData %}{% endif %}">batch upload page</a> which will enable you to use the WholeCellKB Excel interface to more rapidly edit your model organism databases.</p>
+
+<p>See <a href="#developing">below</a> for more information on creating your own model organism databases with WholeCellKB.</p>
+
+</p>
+</div>
+
+<div><h2><a name="downloading_content"></a>Downloading WholeCellKB content</h2>
+<p>The content of WholeCellKB can be downloaded <a href="{% if species %}{% url public.views.exportData species_wid=species.wid %}{% else %}{% url public.views.exportData %}{% endif %}">here</a>.</p>
+
+<p>The content of WholeCellKB is available in six formats:
+<ul class="download_formats">
+<li><i>BibTex</i><br/>This format provides all of the references cited by the selected entries in BibTex format. See <a href="http://en.wikipedia.org/wiki/BibTeX">Wikipedia</a> for more information about the BibTex citation format.</li>
+<li><i>Excel 2007</i><br/>This format provides the selected entries in a tabular format, with separate tables on separate worksheets for each entry type (eg. Metabolite, Reaction, etc). Entries correspond to rows in the exported tables. Properties correspond to columns. Properties which represent many-to-many relationships among entries are presented as comma-separated lists and JSON-formatted strings.</li>
+<li><i>HyperText Markup Language (HTML)</i><br/>This format returns an HTML-formatted table containing the WID and name of the selected entries.</li>
+<li><i>JavaScript Object Notation (JSON)</i><br/><p>This format returns a JSON-encoded JavaScript object with four properties:
+	<ul>
+	<li><tt>title</tt>: String which describes exported species.</li>
+	<li><tt>comments</tt>: String which describes how and when the data was exported.</li>
+	<li><tt>copyright</tt>: String which describes how and when the data was curated.</li>
+	<li><tt>data</tt>: Array which contains the selected entries. Each element of the array is a JSON-serialized version of a single WholeCellKB entry, and contains several properties including <tt>wid</tt>, <tt>name</tt>, <tt>created_date</tt>, and <tt>last_updated_date</tt>. See the <a href="#data_model">data model section</a> above for more information about the properties of each entry type.</li>
+	</ul></p>
+	<p>See <a href="http://en.wikipedia.org/wiki/JSON">Wikipedia</a> for more information about the JSON data format.</p></li>
+<li><i>Portable Document Format (PDF)</i><br/>This format returns a PDF-formatted table containing the WID and name of the selected entries.</li>
+<li><i>Extensible Markup Language (XML)</i><br/>This format returns an XML object with one property, <tt>objects</tt>, which contains a list of the selected entries, each represented by an XML object of type <tt>object</tt> containing XML objects of type <tt>field</tt> which represent their attributes including the WID, name, creation date, and last updated date. See the <a href="#data_model">data model section</a> above for more information about the properties of each entry type. See <a href="http://en.wikipedia.org/wiki/XML">Wikipedia</a> for more information about the XML data format.</li>
+</ul>
+</p>
+
+<p>Entries exported in BibTex, Excel, JSON, or XML format contains two properties <tt>created_date</tt> and <tt>last_updated_date</tt> which indicate each entry's revision history. See <a href="#versioning">above</a> for further information.</p>
+</div>
+
+<div><h2><a name="downloading_source"></a>Downloading WholeCellKB source code</h2>
+<p>The WholeCellKB source code is freely available at <a href="https://simtk.org/project/xml/downloads.xml?group_id=714#package_id1290">SimTK</a>. Documentation for the source code is available <a href="{% get_static_prefix %}public/doc">here</a>. Additional documentation for the data model is available <a href="#data_model">above</a>.</p>
+</div>
+	
+<div><h2><a name="developing"></a>Want to develop your own model organism database?</h2>
+<p>The WholeCellKB software was designed to enable modelers to quickly develop the databases needed for whole-cell models. In particular, the WholeCellKB software enables modelers to:
+<ul>
+<li>Collaboratively create and edit model organism databases via web-based and Excel interfaces</li>
+<li>Easily customize its data model without any knowledge of SQL and only minimal programming</li>
+<li>Easily customize its web-based user interface including the layout and information displayed on entry page</li>
+</ul>
+</p>
+
+<p>To create and customize your own model organism database download and install the <a href="https://simtk.org/project/xml/downloads.xml?group_id=714#package_id1290">WholeCellKB source code</a> at SimTK. See the <a href="https://simtk.org/project/xml/downloads.xml?group_id=714#package_id1290">Developer's Guide</a> for detailed instructions on installing the WholeCellKB software, creating new model organism databases, and customizing the data model and user interface. See also the <a href="{% get_static_prefix %}public/doc">source code</a> and <a href="#data_model">data model</a> documentation.</p>
+</div>
+
+<div><h2><a name="modeling"></a>Mathematical modeling</h2>
+<p>WholeCell was specifically designed to enable comprehensive, dynamic whole-cell simulations. Please see <a href="#citing">Karr <i>et al.</i>, 2012 Data S1</a> for information about how WholeCellKB can be used to develop whole-cell simulations.</p>
+</div>
+
+<div><h2><a name="starting"></a>Getting started</h2>
+<p>The best ways to get started are to browse or search WholeCellKB using the menu or the search box at the top of this page. See the <a href="{% if species %}{% url public.views.tutorial species_wid=species.wid %}{% else %}{% url public.views.tutorial %}{% endif %}">tutorial</a> for additional help getting started.</p>
+</div>
+
+<div><h2><a name="citing"></a>Citing WholeCellKB</h2>	
+<p>Please use the following references to cite WholeCellKB:</p>
+<p>Karr JR, Sanghvi JC, Macklin DN, Arora A, Covert MW. WholeCellKB: Model Organism Databases for Comprehensive Whole-Cell Models. <i>Nucleic Acids Research</i> <b>41</b>, D787-D792 (2013). <a href="http://nar.oxfordjournals.org/content/early/2012/11/21/nar.gks1108.long">Nucleic Acids Research</a> | <a href="http://www.ncbi.nlm.nih.gov/pubmed/23175606">PubMed</a></p>
+<p>Karr JR, Sanghvi JC, Macklin DN, Gutschow MV, Jacobs JM, Bolival B, Assad-Garcia N, Glass JI, Covert MW. A Whole-Cell Computational Model Predicts Phenotype from Genotype. <i>Cell</i> <b>150</b>, 389-401 (2012). <a href="http://www.cell.com/abstract/S0092-8674(12)00776-3">Cell</a> | <a href="http://www.ncbi.nlm.nih.gov/pubmed/22817898">PubMed</a></p>
+</div>
+
+<div><h2><a name="team"></a>Development Team</h2>	
+<p>WholeCellKB was developed by a team of researchers at Stanford University:
+<ul>
+<li><a href="http://www.stanford.edu/~jkarr">Jonathan Karr</a>, Graduate Student in Biophysics</li>
+<li><a href="http://stanfordwho.stanford.edu/SWApp/lookup?search=Jayodita Sanghvi">Jayodita Sanghvi</a>, Graduate Student in Bioengineering</li>
+<li><a href="http://stanfordwho.stanford.edu/SWApp/lookup?search=Derek Macklin">Derek Macklin</a>, Graduate Student in Bioengineering</li>
+<li><a href="http://www.linkedin.com/in/abhishekarora88">Abhishek Arora</a>, Graduate Student in Electrical Engineering</li>
+<li><a href="http://covertlab.stanford.edu/">Markus Covert</a>, Assistant Professor of Bioengineering</li>
+</ul></p>
+</div>
+
+<div><h2><a name="contact"></a>Questions &amp; comments</h2>
+<p>Please use the <img src="{% get_static_prefix %}public/img/pencil.png" class="inline-icon" alt="pencil"/> icon at the bottom right of each data page to suggest edits to the content of WholeCellKB.</p>
+<p>Please contact us at <a href="mailto:wholecell[at]lists.stanford.edu">wholecell@lists.stanford.edu</a> with any questions and/or comments about WholeCellKB.</p>
+</div>
+{% endblock %}

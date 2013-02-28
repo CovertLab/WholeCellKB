@@ -1,0 +1,46 @@
+{% extends "public/base.html" %}
+
+{% comment %}
+Delete confirmation page template
+
+Author: Jonathan Karr, jkarr@stanford.edu
+Affiliation: Covert Lab, Department of Bioengineering, Stanford University
+Last updated: 2012-07-17
+{% endcomment %}
+
+{% load static %}
+{% load templatetags %}
+
+{% block head_title %}{{ block.super }} :: Delete? {{ model_verbose_name|lower }} :: queryset.0.wid {% endblock %}
+{% block page_title %}Delete?{% endblock %}
+
+{% block extrastyles %}
+h1, #content{
+	text-align:center;
+}
+{% endblock %}
+
+{% block action_icons %}
+{% if not request.user.is_anonymous and queryset|length > 0 %}
+<a href="{% url public.views.detail species_wid=species.wid wid=queryset.0.wid %}"><img src="{% get_static_prefix %}public/img/page_white_text.png" title="View" alt="View" /></a>
+<a href="{% url public.views.edit species_wid=species.wid wid=queryset.0.wid %}"><img src="{% get_static_prefix %}public/img/pencil.png" title="Edit" alt="Edit" /></a>
+{% endif %}
+{{ block.super }}
+{% endblock %}
+
+{% block content %}
+{% autoescape off %}
+{% with object=queryset.0 %}
+<form id="delete" action="{{ request.get_full_path }}" method="post">
+{% csrf_token %}
+<div>
+Are you sure you want to delete {{ model_verbose_name|lower }} "<a href="{{ object.get_absolute_url }}">{{ object.wid }}</a>"?
+</div>
+<div>
+<input class="button" type="submit" value="Yes"/>
+<a href="{{ object.get_absolute_url }}"><input class="button" type="button" value="Cancel"/></a>
+</div>
+</form>
+{% endwith %}
+{% endautoescape %}
+{% endblock %}

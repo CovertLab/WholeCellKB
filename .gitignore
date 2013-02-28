@@ -1,0 +1,15 @@
+#compiled files
+*.pyc
+
+#apache access
+*.htaccess
+
+#templates
+templates/search/indexes/public/*_text.txt
+
+#search indices
+xapian_index/*.baseA
+xapian_index/*.baseB
+xapian_index/*.DB
+xapian_index/flintlock
+xapian_index/iamchert

@@ -1,0 +1,476 @@
+{% extends "public/base.html" %}
+{% load static %}
+
+{% comment %}
+Index page template
+
+Author: Jonathan Karr, jkarr@stanford.edu
+Affiliation: Covert Lab, Department of Bioengineering, Stanford University
+Last updated: 2012-07-17
+{% endcomment %}
+
+{% load templatetags %}
+
+{% block action_icons %}
+{% if request.user.is_anonymous %}
+	{% if species %}
+<a href="mailto:wholecell[at]lists.stanford.edu?subject=WholeCellKB Species={{ species.wid }}"><img src="{% get_static_prefix %}public/img/pencil.png" title="Suggest an edit" alt="Suggest an edit" /></a>
+	{% endif %}
+{% else %}
+	{% if species %}
+<a href="{% url public.views.edit species_wid=species.wid wid=species.wid %}"><img src="{% get_static_prefix %}public/img/pencil.png" title="Edit" alt="Edit" /></a>
+<a href="{% url public.views.delete species_wid=species.wid wid=species.wid %}"><img src="{% get_static_prefix %}public/img/delete.png" title="Delete" alt="Delete" /></a>
+	{% endif %}
+<a href="{% if species %}{% url public.views.add species_wid=species.wid model_type='Species' %}{% else %}{% url public.views.add model_type='Species' %}{% endif %}"><img src="{% get_static_prefix %}public/img/add.png" title="Add" alt="Add" /></a>
+{% endif %}
+{{ block.super }}
+{% endblock %}
+
+{% block extrastyles %}
+#content h1{
+	margin-bottom:2px;
+}
+#content h2{
+	margin-top:14px;
+}
+#content .content{
+	margin-top:6px;
+}
+#content .content thead tr th{
+	border-top:1px solid #3d80b3;
+	border-bottom:1px solid #3d80b3;
+	background:#d6edff;
+}
+#content .content tbody tr td.last-row{
+	border-bottom:1px solid #3d80b3;
+}
+#content .content tbody tr td{
+	background:#e3e3e3;
+}
+#content .content tbody tr td.even{
+	background:#efefef;
+}
+
+#content .content tr th:nth-child(2){
+	text-align:right;
+	padding-right:2px;
+}
+#content .content tr td:nth-child(2){
+	text-align:right;
+	padding-right:2px;
+}
+#content .content tr th:nth-child(4n+1), #content .content tr td:nth-child(4n+1){ min-width:140px;}
+#content .content tr th:nth-child(4n+1), #content .content tr td:nth-child(4n+2){ min-width:25px;}
+#content .content tr th:nth-child(4n+3), #content .content tr td:nth-child(4n+3){ min-width:16px;}
+#content .content tr th:nth-child(4n+4), #content .content tr td:nth-child(4n+4){
+	width:20px;
+	border-top:none;
+	border-bottom:none;
+	background:none;
+}
+#content .content tbody tr td.after-last-row{
+	background:none;
+}
+#content .content tr th:last-child, #content .content tr td:last-child{
+	width:auto;
+}
+{% endblock %}
+
+{% block content %}
+{% if species %}
+<div><h1>Welcome to the <i>{{ species.name }}</i> database!</h1>
+
+<p>{% autoescape off %}{{ species.comments }}{% endautoescape %}</p>
+
+{% if species.synonyms.all|length > 0 %}
+<h2>Synonyms</h2>
+<p>{% for syn in species.synonyms.all %}{{ syn.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+{% endif %}
+
+{% if species.cross_references.all|length > 0 %}
+<h2>Cross references</h2>
+<p>{% for cr in species.cross_references.all %}{{ cr.source }}: <a href="{{ cr.source|get_cross_reference:cr.xid }}">{{ cr.xid }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+{% endif %}
+
+<h2>Genetic code</h2>
+<p><a href="http://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi/#SG{{ species.genetic_code }}">{{ species.genetic_code|get_genetic_code_name }} ({{ species.genetic_code }})</a></p>
+
+<h2>Content</h2>
+<table class="content">
+<thead>
+	<tr>
+	{% for tmp in content %}
+		<th>Content</th>
+		<th>Value</th>
+		<th>Units</td>
+		<th>&nbsp;</th>
+	{% endfor %}
+	</tr>
+</thead>
+<tbody>
+{% for tmp in contentRows %}
+	<tr>
+		{% for tmp2 in content %}
+		
+		{% if tmp2|length > forloop.parentloop.counter0 %}		
+			{% with val=tmp2|getattribute:forloop.parentloop.counter0 %}
+			<td class="
+				{% if forloop.parentloop.counter0 < tmp2|length and val.0|divisibleby:2 %}even {% endif %}
+				{% if forloop.parentloop.counter0 == tmp2|length|add:-1 %}last-row {% endif %}
+				" 
+				style="{% if val.1 == 0 %}font-weight:bold;{% else %}padding-left:{{ val.1|multiply:12 }}px;{% endif %}">{% if val.5 %}
+				<a href="{{ val.5 }}">{% autoescape off %}{{ val.2 }}{% endautoescape %}</a>
+				{% else %}
+				{% autoescape off %}{{ val.2 }}{% endautoescape %}
+				{% endif %}
+			</td>
+			<td class="
+				{% if forloop.parentloop.counter0 < tmp2|length and val.0|divisibleby:2 %}even {% endif %}
+				{% if forloop.parentloop.counter0 == tmp2|length|add:-1 %}last-row {% endif %}
+				">{{ val.3|default_if_none:'&nbsp;' }}</td>
+			<td class="
+				{% if forloop.parentloop.counter0 < tmp2|length and val.0|divisibleby:2 %}even {% endif %}
+				{% if forloop.parentloop.counter0 == tmp2|length|add:-1 %}last-row {% endif %}"
+				>{{ val.4|default_if_none:'&nbsp;' }}</td>
+			<td>&nbsp;</td>
+			{% endwith %}
+		{% else %}
+			<td class="after-last-row">&nbsp;</td>
+			<td class="after-last-row">&nbsp;</td>
+			<td class="after-last-row">&nbsp;</td>
+			<td class="after-last-row">&nbsp;</td>
+		{% endif %}		
+		{% endfor %}
+	</tr>	
+{% endfor %}
+</tbody>
+</table>
+
+<h2>Data sources</h2>
+<script language="javascript" type="text/javascript">
+$(document).ready(function (){		
+	//type
+	var sources_types = [
+		{% for type in sources.types %}
+			{label: '{{ type.type }}', data: {{ type.count }}},
+		{% endfor %}
+	];	
+	$.plot($('#sources_types').find('div'), sources_types, {
+		series: {
+            pie: { 
+                show: true,
+				radius: 1,
+				startAngle: 2,
+                label: {
+					show: true,
+					radius: 2/3,
+					formatter: function(label, series){
+						return '<div class="tickLabel" style="text-align:center; width:90px;">'+label+'<div style="margin-top:4px;">('+series.data[0][1]+', '+series.percent.toFixed(1)+'%)</div></div>';
+					},
+                },
+				stroke:{
+					width:1e-6,
+				},
+				offset: {
+					top: 0,
+					left: 0,
+				},
+				combine: {
+					threshold: 0.05,
+				},
+            }
+        },
+		legend: {
+			show: false,
+		},
+	});
+	
+	//parameter evidence	
+	var sources_evidence_parameters = [
+		{% for type in sources.evidence_parameters %}
+			{label: '{{ type.type }}', data: {{ type.count }}},
+		{% endfor %}
+	];
+	sources_evidence_parameters.reverse();
+	$.plot($('#sources_evidence_parameters').find('div'), sources_evidence_parameters, {
+		series: {
+            pie: { 
+                show: true,
+				radius: 1,
+				startAngle: 2,
+                label: {
+					show: true,
+					radius: 2/3,
+					formatter: function(label, series){
+						return '<div class="tickLabel" style="text-align:center; width:90px;">'+label+'<div style="margin-top:4px;">('+series.percent.toFixed(1)+'%)</div></div>';
+					},
+                },
+				stroke:{
+					width:1e-6,
+				},
+				offset: {
+					top: 0,
+					left: 0,
+				},
+				combine: {
+					threshold: 0.05,
+				},
+            }
+        },
+		legend: {
+			show: false,
+		},
+	});
+	
+	//evidence, by species
+	var sources_evidence_species = [
+		{% for species in sources.evidence_species %}
+			{label: '{{ species.species|default_if_none:"N/A" }}', data: {{ species.count }}},
+		{% endfor %}
+	];
+	sources_evidence_species.reverse();
+	$.plot($('#sources_evidence_species').find('div'), sources_evidence_species, {
+		series: {
+            pie: { 
+                show: true,
+				radius: 1,
+				startAngle: 2,
+                label: {
+					show: true,
+					radius: 2/3,
+					formatter: function(label, series){
+						return '<div class="tickLabel" style="text-align:center; width:90px;"><i>'+label+'</i><div style="margin-top:4px;">('+series.percent.toFixed(1)+'%)</div></div>';
+					},
+                },
+				stroke:{
+					width:1e-6,
+				},
+				offset: {
+					top: 0,
+					left: 0,
+				},
+				combine: {
+					threshold: 0.05,
+				},
+            }
+        },
+		legend: {
+			show: false,
+		},
+	});
+	
+	//evidence, by media
+	var sources_evidence_media = [
+		{% for media in sources.evidence_media %}
+			{label: '{{ media.media|default_if_none:"N/A" }}', data: {{ media.count }}},
+		{% endfor %}
+	];
+	sources_evidence_media.reverse();
+	$.plot($('#sources_evidence_media').find('div'), sources_evidence_media, {
+		series: {
+            pie: { 
+                show: true,
+				radius: 1,
+				startAngle: 2,
+                label: {
+					show: true,
+					radius: 2/3,
+					formatter: function(label, series){
+						return '<div class="tickLabel" style="text-align:center; width:90px;">'+label+'<div style="margin-top:4px;">('+series.percent.toFixed(1)+'%)</div></div>';
+					},
+                },
+				stroke:{
+					width:1e-6,
+				},
+				offset: {
+					top: 0,
+					left: 0,
+				},
+				combine: {
+					threshold: 0.05,
+				},
+            }
+        },
+		legend: {
+			show: false,
+		},
+	});
+	
+	//evidence, by pH
+	var sources_evidence_pH = [
+		{% for pH in sources.evidence_pH %}
+			{label: '{{ pH.pH|default_if_none:"N/A" }}', data: {{ pH.count }}},
+		{% endfor %}
+	];
+	sources_evidence_pH.reverse();
+	$.plot($('#sources_evidence_pH').find('div'), sources_evidence_pH, {
+		series: {
+            pie: { 
+                show: true,
+				radius: 1,
+				startAngle: 2,
+                label: {
+					show: true,
+					radius: 2/3,
+					formatter: function(label, series){
+						return '<div class="tickLabel" style="text-align:center; width:90px;">'+label+'<div style="margin-top:4px;">('+series.percent.toFixed(1)+'%)</div></div>';
+					},
+                },
+				stroke:{
+					width:1e-6,
+				},
+				offset: {
+					top: 0,
+					left: 0,
+				},
+				combine: {
+					threshold: 0.05,
+				},
+            }
+        },
+		legend: {
+			show: false,
+		},
+	});
+	
+	//evidence, by temperature
+	var sources_evidence_temperature = [
+		{% for temperature in sources.evidence_temperature %}
+			{label: '{{ temperature.temperature|default_if_none:"N/A" }}', data: {{ temperature.count }}},
+		{% endfor %}
+	];
+	sources_evidence_temperature.reverse();
+	$.plot($('#sources_evidence_temperature').find('div'), sources_evidence_temperature, {
+		series: {
+            pie: { 
+                show: true,
+				radius: 1,
+				startAngle: 2,
+                label: {
+					show: true,
+					radius: 2/3,
+					formatter: function(label, series){
+						return '<div class="tickLabel" style="text-align:center; width:90px;">'+label+'<div style="margin-top:4px;">('+series.percent.toFixed(1)+'%)</div></div>';
+					},
+                },
+				stroke:{
+					width:1e-6,
+				},
+				offset: {
+					top: 0,
+					left: 0,
+				},
+				combine: {
+					threshold: 0.05,
+				},
+            }
+        },
+		legend: {
+			show: false,
+		},
+	});
+	
+	//date	
+	var sources_dates = [{
+		label: 'dates',
+		data: [{% for date in sources.dates %}[{{ date.year }}, {{ date.count }}]{% if not forloop.last %},{% endif %}{% endfor %}],	
+	}];
+	$.plot($('#sources_dates'), sources_dates, {	
+		series: {
+			lines: {
+				show:true,
+				lineWidth: 2,
+			},
+		},
+		xaxis:{
+			tickLength: 3,
+			labelHeight: 4,	
+			autoscaleMargin: 0.01,
+			axisLabel: 'Year',
+			axisLabelUseCanvas: false,
+			axisLabelPadding: 8,
+			color: '#222',
+			tickColor: '#222',
+		},
+		yaxis:{
+			tickLength: 3,			
+			axisLabel: 'No. references',
+			axisLabelUseCanvas: false,
+			axisLabelPadding: 2,
+			color: '#222',
+			tickColor: '#222',
+		},
+		grid: {
+			show: true,
+			labelMargin: 0,
+		},
+		legend: {
+			show: false,
+		},
+	});
+})
+</script>
+<div>
+	<div id="sources_types" style="float:left; width:253px; margin:10px 20px 10px 0px; text-align:center;">
+		<div style="width:253px; height:250px; margin-bottom:5px;"></div>
+		<label class="axisLabels">Sources, by type</label>
+	</div>
+	<div id="sources_evidence_species" style="float:left; width:253px; margin:10px 20px 10px 0px; text-align:center;">
+		<div style="width:253px; height:250px; margin-bottom:5px;"></div>
+		<label class="axisLabels">Evidence, by species</label>
+	</div>
+	<div id="sources_evidence_media" style="float:left; width:253px; margin:10px 0px 10px 0px; text-align:center;">
+		<div style="width:253px; height:250px; margin-bottom:5px;"></div>
+		<label class="axisLabels">Evidence, by media</label>
+	</div>
+	<div style="clear: both;"></div>
+	
+	<div id="sources_evidence_parameters" style="float:left; width:253px; margin:10px 20px 10px 0px; text-align:center;">
+		<div style="width:253px; height:250px; margin-bottom:5px;"></div>
+		<label class="axisLabels">Parameter evidence</label>
+	</div>
+	<div id="sources_evidence_pH" style="float:left; width:253px; margin:10px 20px 10px 0px; text-align:center;">
+		<div style="width:253px; height:250px; margin-bottom:5px;"></div>
+		<label class="axisLabels">Evidence, by pH</label>
+	</div>
+	<div id="sources_evidence_temperature" style="float:left; width:253px; margin:10px 0px 10px 0px; text-align:center;">
+		<div style="width:253px; height:250px; margin-bottom:5px;"></div>
+		<label class="axisLabels">Evidence, by temperature</label>
+	</div>
+	<div style="clear: both;"></div>
+	
+	<div id="sources_dates" style="float:left; width:100%; height:250px; margin:10px 0px 10px 0px;"></div>
+</div>
+</div>
+{% endif %}
+
+<div><h1>About WholeCellKB</h1>
+<p>
+WholeCellKB is a collection of free, open-source model organism databases designed specifically to enable comprehensive, dynamic simulations of entire cells and organisms. WholeCellKB provides comprehensive, quantitative descriptions of individual species including:
+<ul>
+<li>Cellular chemical composition,</li>
+<li>Growth medium composition,</li>
+<li>Gene locations, lengths, and directions,</li>
+<li>Transcription unit organization and transcriptional regulation,</li>
+<li>Macromolecule composition,</li>
+<li>Reaction stoichiometry, kinetics, and catalysis, and</li>
+<li>Extensive links and cross-links to all references used to construct each database.</li>
+</ul></p>
+
+<p>WholeCellKB currently contains a single database of <i>Mycoplasma genitalium</i>, an extremely small gram-positive bacterium and common human pathogen. This database is the most comprehensive description of any single organism to date, and was used to develop the first whole-cell computational model. The <i>M. genitalium</i> database was curated from over 900 primary research articles, reviews, books, and databases over four years by a team of three researchers at Stanford University.</p>
+</div>
+
+<div><h1>Getting started</h1>
+<p>The best ways to get started are to browse or search this database using the menu or the search box at the top of this page. See the <a href="{% if species %}{% url public.views.tutorial species_wid=species.wid %}{% else %}{% url public.views.tutorial %}{% endif %}">tutorial</a> for additional help getting started.</p>
+</div>
+
+<div><h1>More information</h1>	
+<p>Please see the following for more information or to cite WholeCellKB:</p>
+<p>Karr JR, Sanghvi JC, Macklin DN, Arora A, Covert MW. WholeCellKB: Model Organism Databases for Comprehensive Whole-Cell Models. <i>Nucleic Acids Research</i> <b>41</b>, D787-D792 (2013). <a href="http://nar.oxfordjournals.org/content/early/2012/11/21/nar.gks1108.long">Nucleic Acids Research</a> | <a href="http://www.ncbi.nlm.nih.gov/pubmed/23175606">PubMed</a></p>
+<p>Karr JR, Sanghvi JC, Macklin DN, Gutschow MV, Jacobs JM, Bolival B, Assad-Garcia N, Glass JI, Covert MW. A Whole-Cell Computational Model Predicts Phenotype from Genotype. <i>Cell</i> <b>150</b>, 389-401 (2012). <a href="http://www.cell.com/abstract/S0092-8674(12)00776-3">Cell</a> | <a href="http://www.ncbi.nlm.nih.gov/pubmed/22817898">PubMed</a></p>
+</div>
+
+<div><h1>Need help?</h1>
+<p>Please view the <a href="{% if species %}{% url public.views.tutorial species_wid=species.wid %}{% else %}{% url public.views.tutorial %}{% endif %}">tutorial</a>, <a href="{% if species %}{% url public.views.about species_wid=species.wid %}{% else %}{% url public.views.about %}{% endif %}">about page</a>, or contact us at <a href="mailto:wholecell[at]lists.stanford.edu">wholecell@lists.stanford.edu</a>.</p>
+</div>
+{% endblock %}

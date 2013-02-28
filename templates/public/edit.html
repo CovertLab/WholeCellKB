@@ -1,0 +1,409 @@
+{% extends "public/base.html" %}
+
+{% comment %}
+Edit page template
+
+Author: Jonathan Karr, jkarr@stanford.edu
+Affiliation: Covert Lab, Department of Bioengineering, Stanford University
+Last updated: 2012-07-17
+{% endcomment %}
+
+{% load static %}
+{% load templatetags %}
+
+{% block head_title %}{{ block.super }} :: {{ action|capfirst }} {{ model_verbose_name|lower }}{% endblock %}
+{% block page_title %}{{ action|capfirst }} {{ model_verbose_name|lower }}{% endblock %}
+
+{% block action_icons %}
+{% if not request.user.is_anonymous and queryset|length > 0 %}
+<a href="{% url public.views.detail species_wid=species.wid wid=queryset.0.wid %}"><img src="{% get_static_prefix %}public/img/page_white_text.png" title="View" alt="View" /></a>
+<a href="{% url public.views.delete species_wid=species.wid wid=queryset.0.wid %}"><img src="{% get_static_prefix %}public/img/delete.png" title="Delete" alt="Delete" /></a>
+{% endif %}
+{{ block.super }}
+{% endblock %}
+
+{% block content %}
+{% autoescape off %}
+<script>
+	{% for field in fields %}
+	{% if field.type == "ManyToManyField" %}
+	var {{ field.name }}_counter = {{ initial_values|getattribute:field.name|length }}
+	function add_{{ field.name }}(){
+		{{ field.name }}_counter ++
+		counter = {{ field.name }}_counter
+		
+		tr = document.createElement('tr')
+		tr.setAttribute('id', '{{ field.name }}_' + counter)
+		document.getElementById('{{ field.name }}').appendChild(tr)
+		
+		{% for subfield in field.fields %}
+			td = document.createElement('td')
+			{% if subfield.type == "text" or subfield.type == "textarea" %}
+				input = document.createElement('input')
+				input.setAttribute('type', 'text');
+				input.setAttribute('class', 'text')
+			{% elif subfield.type == "select" or subfield.type == "multiselect" %}
+				input = document.createElement('select')		
+				{% if subfield.type == 'multiselect' %}
+				input.setAttribute('multiple', 'multiple')
+				input.setAttribute('class', 'multiple')
+				{% endif %}
+				option = document.createElement('option')
+				option.setAttribute('disabled', true)
+				option.setAttribute('selected', 'selected')
+				option.appendChild(document.createTextNode('Select {{ subfield.verbose_name|lower }}'))
+				input.appendChild(option)
+				{% for choice in subfield.choices %}
+					option = document.createElement('option')
+					option.setAttribute('value', '{{ choice.0 }}')
+					option.appendChild(document.createTextNode('{{ choice.1 }}'))
+					input.appendChild(option)
+				{% endfor %}
+			{% endif %}
+			input.setAttribute('name', '{{ field.name }}_' + counter + '_{{ subfield.name }}')
+			input.setAttribute('id', '{{ field.name }}_' + counter + '_{{ subfield.name }}')
+			td.appendChild(input)
+			tr.appendChild(td)
+		{% endfor %}
+		
+		td = document.createElement('td')
+		a = document.createElement('a')
+		a.setAttribute('href', 'javascript:delete_{{ field.name }}(' + counter + ')')
+		img = document.createElement('img')
+		img.setAttribute('src', '{% get_static_prefix %}public/img/delete.png')
+		a.appendChild(img)
+		td.appendChild(a)
+		tr.appendChild(td)
+	}
+	function delete_{{ field.name }}(idx){
+		document.getElementById('{{ field.name }}').removeChild(document.getElementById('{{ field.name }}_' + idx))
+	}
+	{% endif %}
+	{% endfor %}
+	
+	function addEvidence(field_name, table){
+		table.children('tbody').children('tr').each(function (i, el){
+			counter = i + 1;
+			$(el).children('td:nth-child(1)').children('input').attr('name', field_name + '_' + counter + '_value');
+			$(el).children('td:nth-child(2)').children('input').attr('name', field_name + '_' + counter + '_units');
+			$(el).children('td:nth-child(3)').children('select').attr('name', field_name + '_' + counter + '_is_experimentally_constrained');
+			$(el).children('td:nth-child(4)').children('input').attr('name', field_name + '_' + counter + '_species');
+			$(el).children('td:nth-child(5)').children('input').attr('name', field_name + '_' + counter + '_media');
+			$(el).children('td:nth-child(6)').children('input').attr('name', field_name + '_' + counter + '_pH');
+			$(el).children('td:nth-child(7)').children('input').attr('name', field_name + '_' + counter + '_temperature');
+			$(el).children('td:nth-child(8)').children('input').attr('name', field_name + '_' + counter + '_comments');
+			$(el).children('td:nth-child(9)').children('select').attr('name', field_name + '_' + counter + '_references');
+		});
+		
+		counter = table.children('tbody').children('tr').length + 1
+		
+		table.find('tbody').append($(''
+			+'<tr>'
+				+'<td><input name="' + field_name + '_' + counter + '_value" type="text" class="text"/></td>'
+				+'<td><input name="' + field_name + '_' + counter + '_units" type="text" class="text"/></td>'
+				+'<td>'
+					+'<select name="' + field_name + '_' + counter + '_is_experimentally_constrained" >'
+						+'<option disabled="true" selected="true">Select is experimentally constrained?</option>'
+						+'<option value="True">Yes</option>'
+						+'<option value="False">No</option>'
+					+'</select>'
+				+'</td>'
+				+'<td><input name="' + field_name + '_' + counter + '_species" type="text" class="text"/></td>'
+				+'<td><input name="' + field_name + '_' + counter + '_media" type="text" class="text"/></td>'
+				+'<td><input name="' + field_name + '_' + counter + '_pH" type="text" class="text"/></td>'
+				+'<td><input name="' + field_name + '_' + counter + '_temperature" type="text" class="text"/></td>'
+				+'<td><input name="' + field_name + '_' + counter + '_comments" type="text" class="text"/></td>'
+				+'<td>'
+					+'<select name="' + field_name + '_' + counter + '_references" multiple="true" class="multiple">'
+						+'<option disabled="true" selected="true">Select refs</option>'
+						{% for ref in references_choices %}
+						+'<option value="{{ ref.0 }}">{{ ref.0 }}</option>'
+						{% endfor %}
+					+'</select>'
+				+'</td>'
+				+'<td><a href="javascript:void(0)" onclick="$(this).parent().parent().remove();"><img src="{% get_static_prefix %}public/img/delete.png" /></a></td>'
+			+'</tr>'))
+	}
+	
+	function openEvidenceWindow(self){		
+		self = $(self);
+		var container = self.parent().find('.evidence-container')
+		
+		var dlg = $('#modal')
+		dlg.html(container.html())
+		dlg.dialog({
+			autoOpen: true,
+			draggable: false, 
+			resizable: false,
+			modal: true, 
+			position: 'center', 
+			title: 'Evidence',
+			width: 800,
+			minHeight:20,
+			close: function(event, ui) {
+				$(dlg.find('table.evidence').children('tbody')).children('tr').each(function(i, el){
+					$(el).children('td').each(function(i, el){
+						el = $(el)
+						var input = $(el.children('input'))
+						var select = $(el.children('select'))
+						switch (i){
+							case 0:
+							case 1:
+							case 3:
+							case 4:
+							case 5:
+							case 6:
+							case 7:
+								input.attr('value', input.val())
+								break;
+							case 2:
+							case 8:
+								var vals = select.val();
+								if (i == 2 && vals != null)
+									vals = [vals];
+								
+								select.children(':selected').each(function(i, el){
+									$(el).attr('selected', false);
+								});
+								
+								if (vals == null)
+									break;
+								
+								for (var j = 0; j < vals.length; j++){
+									$(select.children('option[value="' + vals[j] + '"]')).attr('selected', true);
+								}
+								
+								break;
+						}
+					});
+				});				
+				container.html(dlg.html())
+				dlg.html('')
+			},
+		});
+	}
+</script>
+
+<form name="edit" id="edit" action="{{ request.get_full_path }}" method="post">
+{% csrf_token %}
+<table>
+	<tbody>
+	{% for field in fields %}
+		{% with initial_value=initial_values|getattribute:field.name error_message=error_messages|getattribute:field.name %}
+		<tr>			
+			<th>{{ field.verbose_name }}</th>
+			<td>
+				<div class="error">{% if error_message %}{{ error_message }}{% endif %}</div>
+				{% if field.type == "text" %}
+					<input type="text" class="text" name="{{ field.name }}" id="{{ field.name }}" value="{{ initial_value|default_if_none:"" }}"/>
+				{% elif field.type == "textarea" %}
+					<textarea name="{{ field.name }}" id="{{ field.name }}">{{ initial_value|default_if_none:"" }}</textarea>
+				{% elif field.type == "select" or field.type == "multiselect" %}
+					<select name="{{ field.name }}" id="{{ field.name }}"{% if field.type == "multiselect" %} multiple="multiple" class="multiple"{% endif %}>
+						{% if field.type == "select" %}
+						<option disabled="true"{% if initial_value|default_if_none:"" == "" %} selected="selected"{% endif %}>Select {{ field.verbose_name|lower }}</option>
+						{% endif %}
+						{% for choice in field.choices %}
+						<option value="{{ choice.0 }}"
+							{% if field.type == "select" and choice.0 == initial_value %} selected="selected"
+							{% elif field.type == "select" and choice.0 == initial_value|stringformat:"s" %} selected="selected"
+							{% elif field.type != "select" and choice.0 in initial_value %} selected="selected"
+							{% endif %}
+							>{{ choice.1 }}</option>
+						{% endfor %}
+					</select>
+				{% elif field.type == "ForeignKey" %}
+					<table class="ForeignKey">
+						<tbody>
+					{% for subfield in field.fields %}
+					{% with sub_initial_value=initial_value|getattribute:subfield.name %}
+							<tr>
+								<th>{{ subfield.verbose_name }}</th>
+								<td>
+						{% if subfield.type == "text" %}
+									<input type="text" class="text" name="{{ field.name }}_{{ subfield.name }}" id="{{ field.name }}_{{ subfield.name }}" value="{{ sub_initial_value|default_if_none:"" }}"/>
+						{% elif subfield.type == "textarea" %}
+									<textarea name="{{ field.name }}_{{ subfield.name }}" id="{{ field.name }}_{{ subfield.name }}">{{ sub_initial_value|default_if_none:"" }}</textarea>
+						{% elif subfield.type == "select" or subfield.type == "multiselect" %}
+									<select name="{{ field.name }}_{{ subfield.name }}" id="{{ field.name }}_{{ subfield.name }}"{% if subfield.type == "multiselect" %} multiple="multiple" class="multiple"{% endif %}>
+										{% if subfield.type == "select" %}
+										<option disabled="true"{% if sub_initial_value|default_if_none:"" == "" %} selected="selected"{% endif %}>Select {{ subfield.verbose_name|lower }}</option>
+										{% endif %}
+								{% for choice in subfield.choices %}
+										<option value="{{ choice.0 }}"											
+											{% if subfield.type == "select" and choice.0 == sub_initial_value %} selected="selected"
+											{% elif subfield.type == "select" and choice.0 == sub_initial_value|stringformat:"s" %} selected="selected"
+											{% elif subfield.type != "select" and choice.0 in sub_initial_value %} selected="selected"
+											{% endif %}
+											>{{ choice.1 }}</option>
+								{% endfor %}
+									</select>
+						{% endif %}
+						
+								{% if subfield.name = 'evidence' %}
+								<div>
+								<table class="evidence">
+									<thead>
+										<tr>
+											<th>Value</th>
+											<th>Units</th>
+											<th>Expt?</th>
+											<th>Species</th>
+											<th>Media</th>
+											<th>pH</th>
+											<th>Temp (C)</th>
+											<th>Comments</th>
+											<th>Refs</th>
+											<th>&nbsp;</th>
+										</tr>
+									</thead>
+									<tbody>
+										{% for sub_sub_initial_value in sub_initial_value %}
+										<tr>
+											<td><input type="text" class="text" name="{{ field.name }}_{{ subfield.name }}_{{ forloop.counter }}_value" value="{{ sub_sub_initial_value.value|default_if_none:"" }}" /></td>
+											<td><input type="text" class="text" name="{{ field.name }}_{{ subfield.name }}_{{ forloop.counter }}_units" value="{{ sub_sub_initial_value.units|default_if_none:"" }}" /></td>
+											<td>
+												<select name="{{ field.name }}_{{ subfield.name }}_{{ forloop.counter }}_is_experimentally_constrained">
+												<option disabled="true">Select is experimentally constrained?</option>
+												<option value="True" {% if sub_sub_initial_value.is_experimentally_constrained %}selected="true"{% endif %}>Yes</option>
+												<option value="False" {% if not sub_sub_initial_value.is_experimentally_constrained %}selected="true"{% endif %}>No</option>
+												</select>
+											</td>
+											<td><input type="text" class="text" name="{{ field.name }}_{{ subfield.name }}_{{ forloop.counter }}_species" value="{{ sub_sub_initial_value.species|default_if_none:"" }}" /></td>
+											<td><input type="text" class="text" name="{{ field.name }}_{{ subfield.name }}_{{ forloop.counter }}_media" value="{{ sub_sub_initial_value.media|default_if_none:"" }}" /></td>
+											<td><input type="text" class="text" name="{{ field.name }}_{{ subfield.name }}_{{ forloop.counter }}_pH" value="{{ sub_sub_initial_value.pH|default_if_none:"" }}" /></td>
+											<td><input type="text" class="text" name="{{ field.name }}_{{ subfield.name }}_{{ forloop.counter }}_temperature" value="{{ sub_sub_initial_value.temperature|default_if_none:"" }}" /></td>
+											<td><input type="text" class="text" name="{{ field.name }}_{{ subfield.name }}_{{ forloop.counter }}_comments" value="{{ sub_sub_initial_value.comments|default_if_none:"" }}" /></td>
+											<td>
+												<select name="{{ field.name }}_{{ subfield.name }}_{{ forloop.counter }}_references" multiple="true" class="multiple">
+												<option disabled="true">Select refs</option>
+												{% for choice in subfield.fields.8.choices %}
+												<option value="{{ choice.0 }}" {% if choice.0 in sub_sub_initial_value.references %}selected="true"{% endif %}>{{ choice.1 }} </option>
+												{% endfor %}
+												</select>
+											</td>
+											<td><a href="javascript:void(0)" onclick="$(this).parent().parent().remove();"><img src="{% get_static_prefix %}public/img/delete.png"></a></td>
+										</tr>
+										{% endfor %}
+									</tbody>
+								</table>
+								<a href="javascript:void(0)" onclick="addEvidence('{{ field.name }}_{{ subfield.name }}', $(this).parent().find('table.evidence'))">More</a>
+								</div>
+								{% endif %}
+								</td>
+							</tr>
+					{% endwith %}
+					{% endfor %}
+						</tbody>
+					</table>
+				{% elif field.type == "ManyToManyField" %}
+					<table class="ManyToManyField">
+						<thead>
+							<tr>
+					{% for subfield in field.fields %}
+								<th>{{ subfield.verbose_name }}</th>
+					{% endfor %}
+								<th>&nbsp;</th>
+							</tr>
+						<thead>
+						<tbody id="{{ field.name }}">
+					{% for child_initial_values in initial_value %}
+							<tr id="{{ field.name }}_{{ forloop.counter }}">
+						{% for subfield in field.fields %}
+						{% with child_initial_value=child_initial_values|getattribute:subfield.name %}
+								<td>								
+							{% if subfield.name == 'evidence' %}
+									<div>
+										<a href="javascript:void(0)" onclick="openEvidenceWindow(this);">Show</a>
+										<div class="evidence-container" style="display:none;">
+											<table class="evidence">
+												<thead>
+													<tr>
+														<th>Value</th>
+														<th>Units</th>
+														<th>Expt?</th>
+														<th>Species</th>
+														<th>Media</th>
+														<th>pH</th>
+														<th>Temp (C)</th>
+														<th>Comments</th>
+														<th>Refs</th>
+														<th>&nbsp;</th>
+													</tr>
+												</thead>
+												<tbody>
+													{% for child_child_initial_value in child_initial_value %}
+													<tr>
+														<td><input type="text" class="text" name="{{ field.name }}_{{ forloop.parentloop.parentloop.counter }}_{{ subfield.name }}_{{ forloop.counter }}_value" value="{{ child_child_initial_value.value|default_if_none:"" }}" /></td>
+														<td><input type="text" class="text" name="{{ field.name }}_{{ forloop.parentloop.parentloop.counter }}_{{ subfield.name }}_{{ forloop.counter }}_units" value="{{ child_child_initial_value.units|default_if_none:"" }}" /></td>
+														<td>
+															<select name="{{ field.name }}_{{ forloop.parentloop.parentloop.counter }}_{{ subfield.name }}_{{ forloop.counter }}_is_experimentally_constrained">
+															<option disabled="true">Select is experimentally constrained?</option>
+															<option value="True" {% if child_child_initial_value.is_experimentally_constrained %}selected="true"{% endif %}>Yes</option>
+															<option value="False" {% if not child_child_initial_value.is_experimentally_constrained %}selected="true"{% endif %}>No</option>
+															</select>
+														</td>
+														<td><input type="text" class="text" name="{{ field.name }}_{{ forloop.parentloop.parentloop.counter }}_{{ subfield.name }}_{{ forloop.counter }}_species" value="{{ child_child_initial_value.species|default_if_none:"" }}" /></td>
+														<td><input type="text" class="text" name="{{ field.name }}_{{ forloop.parentloop.parentloop.counter }}_{{ subfield.name }}_{{ forloop.counter }}_media" value="{{ child_child_initial_value.media|default_if_none:"" }}" /></td>
+														<td><input type="text" class="text" name="{{ field.name }}_{{ forloop.parentloop.parentloop.counter }}_{{ subfield.name }}_{{ forloop.counter }}_pH" value="{{ child_child_initial_value.pH|default_if_none:"" }}" /></td>
+														<td><input type="text" class="text" name="{{ field.name }}_{{ forloop.parentloop.parentloop.counter }}_{{ subfield.name }}_{{ forloop.counter }}_temperature" value="{{ child_child_initial_value.temperature|default_if_none:"" }}" /></td>
+														<td><input type="text" class="text" name="{{ field.name }}_{{ forloop.parentloop.parentloop.counter }}_{{ subfield.name }}_{{ forloop.counter }}_comments" value="{{ child_child_initial_value.comments|default_if_none:"" }}" /></td>
+														<td>
+															<select name="{{ field.name }}_{{ forloop.parentloop.parentloop.counter }}_{{ subfield.name }}_{{ forloop.counter }}_references" multiple="true" class="multiple">
+															<option disabled="true">Select refs</option>
+															{% for choice in subfield.fields.8.choices %}
+															<option value="{{ choice.0 }}" {% if choice.0 in child_child_initial_value.references %}selected="true"{% endif %}>{{ choice.1 }} </option>
+															{% endfor %}
+															</select>
+														</td>
+														<td><a href="javascript:void(0)" onclick="$(this).parent().parent().remove();"><img src="{% get_static_prefix %}public/img/delete.png"></a></td>
+													</tr>
+													{% endfor %}
+												</tbody>												
+											</table>
+											<a href="javascript:void(0)" onclick="addEvidence('{{ field.name }}_{{ forloop.parentloop.counter }}_{{ subfield.name }}', $(this).parent().find('table.evidence'))">More</a>
+										</div>
+									</div>
+							{% elif subfield.type == "text" or subfield.type == "textarea" %}
+									<input type="text" class="text" name="{{ field.name }}_{{ forloop.parentloop.counter }}_{{ subfield.name }}" id="{{ field.name }}_{{ forloop.parentloop.counter }}_{{ subfield.name }}" value="{{ child_initial_value|default_if_none:"" }}"/>
+							{% elif subfield.type == "select" or subfield.type == "multiselect" %}
+									<select name="{{ field.name }}_{{ forloop.parentloop.counter }}_{{ subfield.name }}" id="{{ field.name }}_{{ forloop.parentloop.counter }}_{{ subfield.name }}"{% if subfield.type == "multiselect" %} multiple="multiple" class="multiple"{% endif %}>
+										{% if subfield.type == "select" %}
+										<option disabled="true"{% if child_initial_value|length == 0 %} selected="selected"{% endif %}>Select {{ subfield.verbose_name|lower }}</option>
+										{% endif %}
+								{% for choice in subfield.choices %}									
+										<option value="{{ choice.0 }}"
+											{% if subfield.type == "select" and choice.0 == child_initial_value %} selected="selected"
+											{% elif subfield.type == "select" and choice.0 == child_initial_value|stringformat:"s" %} selected="selected"
+											{% elif subfield.type != "select" and choice.0 in child_initial_value %} selected="selected"
+											{% endif %}
+											>{{ choice.1 }}</option>
+								{% endfor %}
+									</select>									
+							{% endif %}
+								</td>
+						{% endwith %}
+						{% endfor %}
+								<td><a href="javascript:delete_{{ field.name }}({{ forloop.counter }})"><img src="{% get_static_prefix %}public/img/delete.png" /></a></td>
+							</tr>						
+					{% endfor %}
+						</tbody>
+						<tbody>
+							<tr>								
+								<td colspan="{{ field.fields|length|add:1 }}"><a href="javascript:add_{{ field.name }}()">More</a></td>
+							</tr>
+						</tbody>
+					</table>
+				{% endif %}
+			</td>
+		</tr>
+		{% endwith %}
+	{% endfor %}	
+	</tbody>
+</table>
+	<div class="save">
+		<input class="button" type="submit" value="Save"/>
+	</div>
+</form>
+{% endautoescape %}
+{% endblock %}

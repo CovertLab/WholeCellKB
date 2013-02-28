@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+{% comment %}
+Site map
+
+Author: Jonathan Karr, jkarr@stanford.edu
+Affiliation: Covert Lab, Department of Bioengineering, Stanford University
+Last updated: 2012-07-17
+{% endcomment %}
+{% load templatetags %}
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+	<!-- species home page -->
+	<url>
+		<loc>{{ ROOT_URL }}{{ species.get_absolute_url }}</loc> 
+		<lastmod>{{ species.last_updated_date|set_time_zone|date:"c" }}</lastmod>
+	</url>
+	
+	<!-- species browse -->
+	{% for model_name in modelnames %}
+	<url>
+		<loc>{{ ROOT_URL }}{% url public.views.list species_wid=species.wid model_type=model_name %}</loc> 
+		<lastmod>{{ species.last_updated_date|set_time_zone|date:"c" }}</lastmod>
+	</url>
+	{% endfor %}
+	
+	<!-- species entries -->
+	{% for entry in entries %}
+	<url>
+		<loc>{{ ROOT_URL }}{{ entry.get_absolute_url }}</loc> 
+		<lastmod>{{ entry.last_updated_date|set_time_zone|date:"c" }}</lastmod>
+	</url>
+	{% endfor %}
+</urlset>

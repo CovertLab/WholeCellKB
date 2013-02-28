@@ -1,0 +1,29 @@
+{% extends "public/base.html" %}
+
+{% comment %}
+Import data result template
+
+Author: Jonathan Karr, jkarr@stanford.edu
+Affiliation: Covert Lab, Department of Bioengineering, Stanford University
+Last updated: 2012-07-17
+{% endcomment %}
+
+{% load templatetags %}
+
+{% block head_title %}{{ block.super }} :: Import{% endblock %}
+{% block page_title %}Import data{% endblock %}
+
+{% block extrastyles %}
+div.error{
+	font-style:italic;
+	color:red;
+}
+div.error p{
+	margin:0px;
+	padding:0px;
+}
+{% endblock %}
+
+{% block content %}
+<div class="{{ success|yesno:"success,error,maybe"}}">{% autoescape off %}{{ message }}{% endautoescape %}</div>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "public/base.html" %}
+
+{% comment %}
+Login template
+
+Author: Jonathan Karr, jkarr@stanford.edu
+Affiliation: Covert Lab, Department of Bioengineering, Stanford University
+Last updated: 2012-07-17
+{% endcomment %}
+
+{% block head_title %}{{ block.super }} :: Login{% endblock %}
+{% block page_title %}Login{% endblock %}
+{% block action_icons %}{% endblock %}
+
+{% block extrastyles %}
+#main{
+	width:230px;
+}
+h1{
+	text-align:center;
+}
+#login tr:last-child td{
+	padding-top:12px;
+	text-align:right;
+}
+{% endblock %}
+
+{% block content %}
+{% if form.errors %}
+<p class="errors">Your username and password didn't match. Please try again.</p>
+{% endif %}
+<form id="login" method="post" action="{% if species %}{% url public.views.login species_wid=species.wid %}{% else %}{% url public.views.login %}{% endif %}">
+{% csrf_token %}
+	<table>
+	<tr>
+		<td>{{ form.username.label_tag }}</td>
+		<td><input class="text" id="id_username" type="text" name="username" maxlength="30" /></td>
+	</tr>
+	<tr>
+		<td>{{ form.password.label_tag }}</td>
+		<td><input class="text" type="password" name="password" id="id_password" /></td>
+	</tr>
+	<tr>
+		<td colspan="2"><input class="button" type="submit" value="login" /></td>
+	</tr>
+	</table>
+<input type="hidden" name="next" value="{{ next }}" />
+</form>
+{% endblock %}

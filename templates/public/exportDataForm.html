@@ -1,0 +1,100 @@
+{% extends "public/base.html" %}
+
+{% comment %}
+Export data form template
+
+Author: Jonathan Karr, jkarr@stanford.edu
+Affiliation: Covert Lab, Department of Bioengineering, Stanford University
+Last updated: 2012-07-17
+{% endcomment %}
+
+{% load templatetags %}
+
+{% block head_title %}{{ block.super }} :: Export{% endblock %}
+{% block page_title %}Export data{% endblock %}
+{% block action_icons %}{% endblock %}
+
+{% block content %}
+<script type="text/javascript" language="javascript">
+function toggleOne(obj){
+	document.exportData.all_model_types.checked = document.exportData.all_model_types.checked & obj.checked;
+}
+function toggleAll(){
+	if (document.exportData.all_model_types.checked){
+		checkAll(document.exportData.{{ form.model_type.html_name }});
+	}else{
+		uncheckAll(document.exportData.{{ form.model_type.html_name }});
+	}
+}
+function checkAll(field){
+	for (i = 0; i < field.length; i++)
+		field[i].checked = true;
+}
+
+function uncheckAll(field){
+	for (i = 0; i < field.length; i++)
+		field[i].checked = false;
+}
+</script>
+<form id="form" name="exportData" action="{% if species %}{% url public.views.exportData species_wid=species.wid %}{% else %}{% url public.views.exportData %}{% endif %}" method="get">
+	<div class="block">
+		<h1>Select {{ form.species.label }}</h1>
+		<div class="content">
+			{% if form.species.errors|length > 0 %}<div class="errors">{{ form.species.errors|join:" " }}</div>{% endif %}
+			<div class="col">
+			{% for choice in form.species.field.choices|firsthalf %}
+				<input type="radio" id="{{ form.species.html_name }}" name="{{ form.species.html_name }}" value="{{ choice.0 }}"{% if choice.0 == species.wid %} checked{% endif %}/><i>{{ choice.1 }}</i><br/>
+			{% endfor %}
+			</div>
+			<div class="col">
+			{% for choice in form.species.field.choices|lasthalf %}
+				<input type="radio" id="{{ form.species.html_name }}" name="{{ form.species.html_name }}" value="{{ choice.0 }}"{% if choice.0 == species.wid %} checked{% endif %}/><i>{{ choice.1 }}</i><br/>
+			{% endfor %}
+			</div>
+			<div style="clear:both;"></div>
+		</div>
+	</div>
+	
+	<div class="block">
+		<h1>Select {{ form.model_type.label }}</h1>
+		<div class="content">
+			{% if form.model_type.errors|length > 0 %}<div class="errors">{{ form.model_type.errors|join:" " }}</div>{% endif %}
+			<div class="col">	
+			{% for choice in form.model_type.field.choices|firsthalf %}
+				<input type="checkbox" id="{{ form.model_type.html_name }}" name="{{ form.model_type.html_name }}" value="{{ choice.0 }}" onchange="javascript:toggleOne(this);" {% if choice.0 in form.model_type.field.initial %} checked{% endif %}/>{{ choice.1 }}<br/>
+			{% endfor %}			
+			</div>
+			<div class="col">
+			{% for choice in form.model_type.field.choices|lasthalf %}
+				<input type="checkbox" id="{{ form.model_type.html_name }}" name="{{ form.model_type.html_name }}" value="{{ choice.0 }}" onchange="javascript:toggleOne(this);" {% if choice.0 in form.model_type.field.initial %} checked{% endif %}/>{{ choice.1 }}<br/>
+			{% endfor %}
+			</div>
+			<div style="clear:both;"></div>
+			
+			{% for choice in form.all_model_types.field.choices %}
+			<input id="{{ form.all_model_types.html_name }}" name="{{ form.all_model_types.html_name }}" type="checkbox" value="{{ choice.0 }}" onchange="javascript:toggleAll();" {% if form.model_type.field.initial|length == form.model_type.field.choices|length %} checked{% endif %}/>{{ choice.1 }}
+			{% endfor %}
+		</div>
+	</div>
+		
+	<div class="block">
+		<h1>Select {{ form.format.label }} <a href="{% if species %}{% url public.views.about species_wid=species.wid %}{% else %}{% url public.views.about %}{% endif %}#downloading_content" style="margin-left:716px; color:white;">?</a></h1>
+		<div class="content">
+			{% if form.format.errors|length > 0 %}<div class="errors">{{ form.format.errors|join:" " }}</div>{% endif %}
+			<div class="col">
+			{% for choice in form.format.field.choices|firsthalf %}
+				<input type="radio" id="{{ form.format.html_name}}" name="{{ form.format.html_name }}" value="{{ choice.0 }}"{% if choice.0 == form.format.field.initial %} checked{% endif %} />{{ choice.1 }}<br/>
+			{% endfor %}
+			</div>
+			<div class="col">
+			{% for choice in form.format.field.choices|lasthalf %}
+				<input type="radio" id="{{ form.format.html_name}}" name="{{ form.format.html_name }}" value="{{ choice.0 }}"{% if choice.0 == form.format.field.initial %} checked{% endif %} />{{ choice.1 }}<br/>
+			{% endfor %}
+			</div>
+			<div style="clear:both;"></div>
+		</div>
+	</div>
+	
+	<input class="button" type="submit" value="Submit" />
+</form>
+{% endblock %}

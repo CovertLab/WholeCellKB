@@ -1,0 +1,521 @@
+\documentclass[twoside]{book}
+
+\newcommand{\isClearDoublePage}{0}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Formatting
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphics,graphicx,color}
+\usepackage[cmyk]{xcolor}
+\definecolor{natureBlue}{cmyk}{1,0.8,0,0}
+\definecolor{natureGray}{cmyk}{0,0,0,0.7}
+
+\usepackage{tabularx}% To get fixed width tables
+\usepackage{bigstrut}
+\usepackage{array}
+\usepackage{float}
+\usepackage{multicol, multirow}
+\usepackage{rotating} %sideways tables, figures
+\usepackage{placeins}
+\usepackage{tabularx, longtable}
+\usepackage{epstopdf}
+
+\setcounter{tocdepth}{1}
+
+\usepackage{appendix}
+\usepackage{pdflscape}
+\usepackage{geometry}
+\geometry{verbose,tmargin=1in,bmargin=1in,lmargin=1in,rmargin=1in}
+
+\usepackage{lmodern}
+\usepackage[pdftex]{thumbpdf}
+\usepackage{ifthen}
+
+\usepackage{enumitem, expdlist}
+\setlist[itemize]{noitemsep, nosep, leftmargin=*}
+\setlist[enumerate]{noitemsep, nosep, leftmargin=*}
+\setlist[description]{noitemsep, nosep, leftmargin=*}
+\usepackage{verbatim}
+%\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancypagestyle{plain}{%
+	\fancyhf{}	
+	\fancyhf[FC]{\thepage}
+	\renewcommand{\headrulewidth}{0pt}
+	\renewcommand{\footrulewidth}{0pt}}
+
+\usepackage[style=nature,sortcites,url=true,doi=true,eprint=true,isbn=true]{biblatex}
+\addbibresource{../paper/references}
+
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\usepackage[titles]{tocloft}
+\renewcommand{\cftchapfont}{\bfseries\Large}
+\setlength{\cftbeforechapskip}{1ex}
+\setlength{\cftbeforesecskip}{-1.5ex}
+\setlength{\cftbeforesubsecskip}{-1.5ex}
+\setlength{\cftbeforesubsubsecskip}{-1.5ex}
+\setlength{\cftbeforeparaskip}{-1.5ex}
+\setlength{\cftparskip}{-1.5ex}
+\setlength{\cftbeforefigskip}{-1.5ex}
+\setlength{\cftbeforetabskip}{-1.5ex}
+\renewcommand{\cftdotsep}{4.5}
+\setlength{\cfttabnumwidth}{30pt}
+\setlength{\cftfignumwidth}{30pt}
+\setlength{\columnsep}{0.5in}
+
+\usepackage[compact]{titlesec}
+\usepackage[font={small,sf}, format=plain, labelformat=simple, labelfont=bf, margin=0.0in, justification=justified, singlelinecheck=true, tableposition=top, figureposition=bottom]{caption}
+
+\captionsetup[table]{skip=0.5ex}
+\captionsetup[longtable]{skip=0.5ex}
+\captionsetup[sidewaystable]{skip=0.5ex}
+\captionsetup[lstlisting]{skip=0.5ex}
+\DeclareCaptionLabelSeparator{bar}{~|~}
+\captionsetup{labelsep=bar}
+
+\setlength{\topmargin}{-.4in}
+\setlength{\textheight}{9.0in}
+\setlength{\oddsidemargin}{0in}
+\setlength{\evensidemargin}{\oddsidemargin}
+\setlength{\hoffset}{0pt}
+\setlength{\textwidth}{6.5in}
+\setlength{\headsep}{.2in}
+\setlength{\headheight}{.2in}
+\setlength{\footskip}{.4in}
+\setlength{\parindent}{0in}
+\setlength{\parskip}{.1in}
+\setlength{\hoffset}{0in}
+\setlength{\voffset}{0in}
+
+\usepackage[bookmarksnumbered=true, bookmarksopen, bookmarksopenlevel=1, bookmarksdepth=3, breaklinks=true]{hyperref}
+\hypersetup{%
+	pdftitle = {WholeCellKB: Pathway/Genome Databases for Comprehensive Whole-Cell Models},
+	pdfsubject = {WholeCellKB user guide.},
+	pdfkeywords = {whole-cell model, systems biology, mycoplasma genitalium},
+	pdfauthor = {Jonathan R. Karr, Jayodita C. Sanghvi, Markus W. Covert},
+	pdfcreator = {\LaTeX\ with package \flqq hyperref\frqq},
+	pdfproducer = {pdfeTeX-0.\the\pdftexversion\pdftexrevision},
+}
+%\pdfinfo{/CreationDate (D:20111207000000-01'00')}
+\usepackage[all]{hypcap}
+
+\usepackage{listings}
+\renewcommand{\lstlistingname}{Box}
+\renewcommand{\lstlistlistingname}{Boxes}
+\def\lstbasicfont{\small\ttfamily}
+\def\mcommentfont{\color[cmyk]{0.8348,0.2082,1,0.0776}} %comments in green
+\lstset{
+	language={},
+	keywordstyle=\bfseries,
+	commentstyle=\itshape,
+	stringstyle={},
+	framexleftmargin=0pt,
+	xleftmargin=0pt,
+	numbers=none,
+	numbersep=10pt,
+	frame=single,
+	captionpos=t,
+	numberbychapter=true}
+\lstdefinestyle{matlabflozstyle}{
+	firstnumber=1,
+	numbers=left,
+	numberfirstline=true,
+	stepnumber=5,
+	numberstyle={\tiny\color[cmyk]{0,0,0,0.7}},
+	framexleftmargin=6mm, 
+	xleftmargin=6mm,
+	numbersep=3mm,
+	language=matlabfloz,                          % use our version of highlighting
+	keywordstyle=\color[cmyk]{0.8837,0.7692,0,0}, % keywords in blue
+	commentstyle=\mcommentfont,                   % comments
+	stringstyle=\color[cmyk]{0.576,0.8064,0,0}}   % strings in purple
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% table, figure fonts
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\makeatletter
+\renewenvironment{table}[1][1]%
+  {\renewcommand{\familydefault}{\sfdefault}\selectfont
+  \@float{table}[#1]\small}
+  {\end@float}
+\makeatother
+
+\makeatletter
+\renewenvironment{figure}[1][1]%
+  {\renewcommand{\familydefault}{\sfdefault}\selectfont
+  \@float{figure}[#1]\small}
+  {\end@float}
+\makeatother
+
+%Bullets
+\AtBeginDocument{
+  \def\labelitemii{\({\bullet}\)}
+  \def\labelitemiii{\({\bullet}\)}
+  \def\labelitemiv{\({\bullet}\)}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% section formatting
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\titlespacing{\subsection}{0pt}{*2}{*-0.5}
+\titlespacing{\subsubsection}{0pt}{1.5ex plus 0.2ex minus .2ex}{-1.6ex}
+
+\titleformat{\subsection}[hang]{\normalfont\normalsize\bfseries}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}[hang]{\normalfont\normalsize\itshape}{\thesubsubsection}{1em}{}
+
+\newcommand{\subsubsubsection}[1]{\paragraph{#1}}
+\newcommand{\subsubsubsubsection}[1]{\subparagraph{#1}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% empty pages between chapters
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\makeatletter
+\ifthenelse{\isClearDoublePage=1}{
+	\def\cleardoublepage{\clearpage\if@twoside \ifodd\c@page\else
+		\thispagestyle{empty}\hbox{}\newpage\if@twocolumn\hbox{}\newpage\fi\fi\fi}
+}{
+	\def\cleardoublepage{\clearpage}
+}
+\makeatother
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% hyphenation
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\hyphenation{Pos-i-tive-In-te-ger-Field In-te-ger-Field}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Begin Document
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+\frontmatter
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Title page             %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\renewcommand{\headrulewidth}{0.5pt}
+\makeatletter
+\def\headrule{}
+\makeatother
+
+\fancyhf{}
+\setcounter{page}{1}
+
+\currentpdfbookmark{Title page}{__TITLE_PAGE__}
+\begin{center}
+\parbox{\textwidth}{\centering
+\vskip1.in
+{\Huge\textbf{WholeCellKB: Pathway/Genome Databases for Comprehensive Whole-Cell Models}}\\
+\vskip0.3in
+}
+{\Large Jonathan R. Karr$^{1}$, Jayodita C. Sanghvi$^{2}$ \& Markus W. Covert$^{2*}$}
+\vskip0.2in
+\parbox{1.1\textwidth}{\raggedright
+$^1$Graduate Program in Biophysics, Stanford University, 318 Campus Drive West, Stanford CA 94305, USA and\\
+$^2$Department of Bioengineering, Stanford University, 318 Campus Drive West, Stanford CA 94305, USA.\\
+\vskip2ex
+$^*$To whom correspondence should be addressed. Tel: +1 650 7256615; Fax: +1 650 7211409; Email: mcovert@stanford.edu.
+}
+\vskip0.6in
+\parbox{\textwidth}{
+	\setlength{\parindent}{0in}
+	\setlength{\parskip}{.1in}
+	WholeCellKB is a collection of free, open-source model organism databases designed specifically to enable comprehensive, dynamic simulations of entire cells and organisms. WholeCellKB provides comprehensive, quantitative descriptions of individual species including:
+	\begin{itemize}
+	\item Cellular chemical composition,
+	\item Growth medium composition,
+	\item Gene locations, lengths, and directions,
+	\item Transcription unit organization and transcriptional regulation,
+	\item Macromolecule composition,
+	\item Reaction stoichiometry, kinetics, and catalysis, and
+	\item Extensive links and cross-links to all references used to construct each model organism database.
+	\end{itemize}
+
+	Please see the tutorial \url{http://wholecellkb.stanford.edu/tutorial} and the about page \url{http://wholecellkb.stanford.edu/about} for more information about WholeCellKB how to use WholeCellKB as well as how it was designed, implemented, and curated.
+	
+	This document provides instructions on how to install and use WholeCellKB. Please contact the authors with any questions; updated contact information is available at \href{http://wholecellkb.stanford.edu/about}{wholecellkb.stanford.edu/about}.
+}
+
+\end{center}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Table of contents      %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\cleardoublepage
+\pagestyle{plain}
+
+\currentpdfbookmark{Table of Contents}{__TOC__}
+\tableofcontents
+
+\cleardoublepage
+\mainmatter
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% installation               
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Installation and requirements}
+This chapter provides instructions on how to install WholeCellKB on CentOS 5.5.
+
+\section{Download and unpack WholeCellKB}
+\begin{enumerate}
+\item Download WholeCellKB software from \url{http://simtk.org/home/wholecell}
+\item Unpack to \path{/path/to/WholeCellKB}
+\end{enumerate}
+
+\section{Install required packages}
+\begin{enumerate}
+\item Install Python (2.7.2), Apache (2.2.3), MySQL (5.0.95), GraphViz
+	
+\item Install mod\_wsgi to enable Apache to run Django. Following the instructions at \url{http://code.google.com/p/modwsgi/wiki/QuickInstallationGuide}.
+\begin{verbatim}
+wget http://modwsgi.googlecode.com/files/mod_wsgi-3.3.tar.gz
+tar xvfz mod_wsgi-3.3.tar.gz
+cd mod_wsgi-3.3/
+./configure  --with-python=/opt/python2.7.2/bin/python
+make
+make install
+\end{verbatim}
+	
+\item Install c++ compiler
+\begin{verbatim}
+yum install gcc-c++
+\end{verbatim}
+  
+\item Install Xapian
+\begin{verbatim}
+curl -O http://oligarchy.co.uk/xapian/1.2.10/xapian-core-1.2.10.tar.gz
+curl -O http://oligarchy.co.uk/xapian/1.2.10/xapian-bindings-1.2.10.tar.gz
+tar xvzf xapian-core-1.2.10.tar.gz
+tar xvzf xapian-bindings-1.2.10.tar.gz
+cd xapian-core-1.2.10
+./configure
+make
+make install
+cd ..
+cd xapian-bindings-1.2.10
+./configure --PYTHON=/opt/python2.7.2/bin/python
+make
+make install
+\end{verbatim}
+		
+\item Install Django and other python packages
+\begin{verbatim}
+pip install django django-haystack xapian-haystack django-extensions
+pip install xhtml2pdf httplib2 nose pisa hashlib huTools BeautifulSoup docutils epydoc
+\end{verbatim}
+
+\item Install ChemAxon Marvin
+	\begin{enumerate}
+	\item Download Marvin Beans from \url{https://www.chemaxon.com/download/marvin/for-end-users/}
+	\item Run installer, install to /usr/share/ChemAxon/MarvinBeans-5.10.4
+\begin{verbatim}
+./marvinbeans-5.10.4-linux.sh
+\end{verbatim}
+	\item Add binaries to system path
+\begin{verbatim}
+cd /usr/local/bin
+ln -s /usr/share/ChemAxon/MarvinBeans-5.10.4/MarvinSketch MarvinSketch
+ln -s /usr/share/ChemAxon/MarvinBeans-5.10.4/MarvinSpace MarvinSpace
+ln -s /usr/share/ChemAxon/MarvinBeans-5.10.4/MarvinView MarvinView
+ln -s /usr/share/ChemAxon/MarvinBeans-5.10.4/bin/cxcalc cxcalc
+ln -s /usr/share/ChemAxon/MarvinBeans-5.10.4/bin/cxtrain cxtrain
+ln -s /usr/share/ChemAxon/MarvinBeans-5.10.4/bin/evaluate evaluate
+ln -s /usr/share/ChemAxon/MarvinBeans-5.10.4/bin/molconvert molconvert
+ln -s /usr/share/ChemAxon/MarvinBeans-5.10.4/bin/msketch msketch
+ln -s /usr/share/ChemAxon/MarvinBeans-5.10.4/bin/mspace mspace
+ln -s /usr/share/ChemAxon/MarvinBeans-5.10.4/bin/mview mview
+ln -s /usr/share/ChemAxon/MarvinBeans-5.10.4/bin/structurecheck structurecheck
+\end{verbatim}
+	\end{enumerate}
+	
+\end{enumerate}
+		
+\section{Configure required packages}
+\begin{enumerate}
+\item Configure Apache to use threading. Uncomment the following line in /etc/sysconfig/httpd
+\begin{verbatim}
+HTTPD=/usr/sbin/httpd.worker
+\end{verbatim}
+		
+\item Configure Apache to use mod\_wgsi to serve Python scripts. Add the following lines to your apache configuration
+\begin{verbatim}
+LoadModule wsgi_module modules/mod_wsgi.so
+
+WSGIDaemonProcess djangoprocess threads=25
+WSGIProcessGroup djangoprocess
+WSGISocketPrefix /var/run/wsgi
+
+Alias /url/to/WholeCellKB/static /path/to/WholeCellKB/static
+<Location "/djangoproject/static">
+	Order allow,deny
+	Allow from all
+</Location>
+
+WSGIScriptAlias /url/to/WholeCellKB /path/to/WholeCellKB/apache/django.wsgi
+<Directory /path/to/WholeCellKB>
+	Order allow,deny
+	Allow from all
+</Directory>
+\end{verbatim}
+		
+\item If you're also using PHP on your server, setup PHP for threading using FastCGI.
+\begin{enumerate}
+\item Install FastCGI
+\begin{verbatim}
+yum install libtool httpd-devel apr-devel apr
+cd /opt
+wget http://www.fastcgi.com/dist/mod_fastcgi-current.tar.gz
+tar -zxvf mod_fastcgi-current.tar.gz
+cd mod_fastcgi-2.4.6/
+cp Makefile.AP2 Makefile
+make top_dir=/usr/lib64/httpd
+make install top_dir=/usr/lib64/httpd
+\end{verbatim}
+
+\item Create file \texttt{/etc/httpd/conf.d/mod\_fastcgi.conf} with line
+\begin{verbatim}
+	LoadModule fastcgi_module modules/mod_fastcgi.so
+\end{verbatim}
+
+\item Disable old PHP configuration
+\begin{verbatim}
+mv /etc/httpd/conf.d/php.conf /etc/httpd/conf.d/php.conf.disable
+\end{verbatim}
+
+\item Create FastCGI configuration file \texttt{/var/www/cgi-bin/php.fcgi} with contents
+\begin{verbatim}
+#!/bin/bash
+# Shell Script To Run PHP5 using mod_fastcgi under Apache 2.x
+# Tested under Red Hat Enterprise Linux / CentOS 5.x
+### Set PATH ###
+PHP_CGI=/usr/bin/php-cgi
+PHP_FCGI_CHILDREN=4
+PHP_FCGI_MAX_REQUESTS=1000
+### no editing below ###
+export PHP_FCGI_CHILDREN
+export PHP_FCGI_MAX_REQUESTS
+exec $PHP_CGI
+\end{verbatim}
+
+\item Make FastCGI configuration executable
+\begin{verbatim}
+chmod +x /var/www/cgi-bin/php.fcgi
+\end{verbatim}
+
+\item In \texttt{/etc/httpd/conf/httpd.conf} under the \texttt{<Directory "/">} tag add lines
+\begin{verbatim}
+AddHandler php5-fastcgi .php
+Action php5-fastcgi /cgi-bin/php.fcgi
+\end{verbatim}
+\end{enumerate}
+\end{enumerate}
+			
+\section{Configure WholeCellKB}
+\begin{enumerate}
+\item Edit WholeCellKB settings. Edit the following variables in the file \path{/path/to/WholeCellKB/settings.py}
+\begin{itemize}
+\item \texttt{ROOT\_URL = '/url/to/WholeCellKB'}
+\item \texttt{ADMINS}
+\item \texttt{DATABASES}: edit host, user, password, schema
+\end{itemize}
+		
+\item Create MySQL database for WholeCellKB.
+\begin{verbatim}
+mysql -h <mysql_host> -u <mysql_user> --password=<mysql_pass> <<MYSQL
+    CREATE DATABASE <mysql_schema>
+    DEFAULT CHARACTER SET utf8
+    DEFAULT COLLATE utf8_unicode_ci
+MYSQL
+\end{verbatim}
+		
+\item Install WholeCell MySQL schema
+\begin{verbatim}
+cd /path/to/WholeCellKB
+./manage.py syncdb
+\end{verbatim}
+	
+\item Initialize full-text search index
+\begin{verbatim}
+cd /path/to/WholeCellKB
+chown -R apache:apache .
+./manage.py rebuild_index
+chmod -R ug+w templates/search/
+chmod -R ug+w xapian_index/
+\end{verbatim}
+		
+\item Setup cron job to periodically update full text index. Run \texttt{crontab -e} and the following line
+\begin{verbatim}
+0 */1 * * * cd /path/to/WholeCellKB; ./updateIndex.sh
+\end{verbatim}
+\end{enumerate}
+	
+\section{Creating and editing model organism databases}
+Visit \texttt{/url/to/WholeCellKB} to begin viewing and editing a model organism database. See Chapter~\ref{creating} for more information.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Creating and editing model organism databases
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{\label{creating}Creating and editing model organism databases}
+To create your first PDGB:
+\begin{enumerate}
+\item Visit \texttt{/url/to/WholeCellKB}
+\item Login. (Optionally edit your user profile)
+\item Click the "+" button at the bottom right corner to create your first model organism database. Fill out the subsequent form and save.
+\item To add data to your new model organism database
+	\begin{itemize}
+	\item Web form method:
+		\begin{enumerate}
+		\item Browse the to the object type
+		\item Click the "+" button at the bottom right
+		\item Fill out the web form and save
+		\end{enumerate}
+	\item Batch import method:
+		\begin{enumerate}
+		\item Export an Excel template using the "download" page
+		\item Edit the Excel template and save
+		\item Upload the Excel workbook using the "import" page
+		\end{enumerate}
+	\end{itemize}
+\item Use the browse and search features to begin viewing your model organism database
+\end{enumerate}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% begin appendix
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{\label{data_model}Customizing the WholeCellKB data model and user interface}
+Customizing the WholeCellKB data model and user interface is easy, and requires minimal programming and no knowledge of SQL. The following documentation is very brief. Please contact the authors for further help customizing the data model.
+
+Briefly, the WholeCellKB data model is defined by the Python file \path{/path/to/WholeCellKB/public/models.py}. The data model contains two kinds of classes: (1) main classes derived from the \texttt{Entry} class and (2) supplementary classes derived from the \texttt{EntryData} class which represent relationships among entries, encapsulate related data, and represent multiple-valued (array) properties of entries.
+
+Both types of classes support a subset of the Django model syntax (see \url{http://www.djangoproject.com} for more information). First, the classes only support 9 kinds of fields: \texttt{BooleanField}, \texttt{CharField}, \texttt{FloatField}, \texttt{ForeignKey}, \texttt{ManyToManyField}, \texttt{IntegerField}, \texttt{Pos\-i\-tive\-In\-te\-ger\-Field}, and \texttt{TextField}. Second, \texttt{OneToOneField} properties can only be used to specify inheritance relationships of \texttt{Entry} subclasses. Third, \texttt{EntryData} subclasses can only define \texttt{ForeignKey} relationships to \texttt{Entry} subclasses.
+
+To edit an existing class, simply edit the definitions of its properties. To add a table to the data model, simply define a new class in the \texttt{models.py} file. To custom how a property is displayed in the detail view add a function with the name \texttt{get\_as\_html\_<propname>} which returns an HTML description of how that property should be displayed. To customize the in order in which properties are displayed in each table's detail view edit the \texttt{fieldsets} meta property. Similarly, edit the \texttt{field\_list} meta property to customize the order in which fields are displayed in each table's edit and Excel views. Finally, edit the \texttt{facet\_fields} meta property to customize the faceted search provided with each table's list view. Edit each class' \texttt{clean} and \texttt{validate\_unique} meta methods to define custom model validation.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% begin appendix
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\appendix
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% License               
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{License}
+Copyright (c) 2012, Stanford University
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+SOFTWARE.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% End Document
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{document}

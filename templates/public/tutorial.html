@@ -1,0 +1,173 @@
+{% extends "public/base.html" %}
+
+{% comment %}
+Tutorial page
+
+Author: Jonathan Karr, jkarr@stanford.edu
+Affiliation: Covert Lab, Department of Bioengineering, Stanford University
+Last updated: 2012-07-17
+{% endcomment %}
+
+{% load static %}
+
+{% block head_title %}{{ block.super }} :: Tutorial{% endblock %}
+{% block page_title %}{% endblock %}
+
+{% block action_icons %}
+<img src="{% get_static_prefix %}public/img/pencil.png" title="Edit" alt="Edit" />
+<img src="{% get_static_prefix %}public/img/json.png" title="Export as JSON" alt="Export as JSON" />
+<img src="{% get_static_prefix %}public/img/xml.gif" title="Export as XML" alt="Export as XML" />
+<img src="{% get_static_prefix %}public/img/page_excel.png" title="Export as Excel" alt="Export as Excel" />
+{{ block.super }}
+{% endblock %}
+
+{% block extrastyles %}
+#content h1{
+	margin-bottom:2px;
+}
+.arrows{
+	z-index:2;
+}
+.gray img{
+	-moz-filter: grayscale(1) brightness(0.15);
+	-ms-filter: grayscale(1) brightness(0.15);
+	-o-filter: grayscale(1) brightness(0.15);
+    -webkit-filter: grayscale(1) brightness(0.15);
+}
+.arrows div:hover img, .selected img{
+    -moz-filter: none;
+	-ms-filter: none;
+	-o-filter: none;
+    -webkit-filter: none;
+}
+
+body, #main, #content{
+	margin:0px;
+	padding:0px;
+	width:100%;
+	height:100%;
+}
+.instructions{
+	position:absolute;
+	top:50%;
+	left:50%;
+	width:600px;
+	height:420px;
+	margin:-205px 0 0 -300px;
+	padding:10px;
+	padding-bottom:0px;
+	border:4px solid #3d80b3;
+	border-radius:12px;
+	background:rgba(48,110,255, 0.10);
+	box-shadow: 10px 10px 20px #888888;
+}
+#content h1{
+	margin-top:0px;
+	padding-top:0px;
+	margin-left:14px;
+}
+.instructions ul li{
+	list-style-type:none;		
+}
+.getting_started, .instructions ul li:hover{
+	list-style-image:url(../static/public/img/square.png);
+}
+.getting_started h2, .instructions ul li:hover h2{
+	color:#3d80b3;
+}
+
+@media print{
+	.arrows{
+		display:none;
+	}
+	.instructions{
+		top:0;
+		left:0;
+		width:auto;
+		height:auto;
+		margin:0;
+		padding:0px;		
+		border:none;
+		border-radius:0;
+		background:transparent;
+		box-shadow: none;
+	}
+	.getting_started, .instructions ul li:hover{
+		list-style-image:none;
+	}
+	.getting_started h2, .instructions ul li:hover h2{
+		color:black;
+	}
+}
+
+.inline-icon{
+	position:relative;
+	top:4px;
+}
+{% endblock %}
+
+{% block content %}
+<script>
+function highlight(id){
+	document.getElementById('getting_started').className = ''
+	document.getElementById(id).className = 'selected'
+}
+function unhighlight(id){
+	document.getElementById(id).className = 'gray'
+}
+</script>
+
+<div class="arrows">
+	<!-- help -->
+	<div id="help" class="gray" style="position:fixed; {% if request.user.is_authenticated %}left:365px;{% else %}left:205px;{% endif %} top:67px;">
+		<img src="{% get_static_prefix %}public/img/tutorial/help.png" />
+	</div>
+	
+	<!-- browse -->
+	<div id="browse" class="gray" style="position:fixed; left:-10px; top:67px;">
+		<img src="{% get_static_prefix %}public/img/tutorial/browse.png" />
+	</div>
+	
+	<!-- search -->
+	<div id="search" class="gray" style="position:fixed; right:70px; top:67px;">
+		<img src="{% get_static_prefix %}public/img/tutorial/search.png" />
+	</div>
+	
+	<!-- actions -->
+	<div id="actions" class="gray" style="position:fixed; right:8px; bottom:20px;">
+		<img src="{% get_static_prefix %}public/img/tutorial/actions.png" />
+	</div>
+</div>
+
+<div class="instructions">
+<h1>Tutorial</h1>
+
+<ul>
+<li id="getting_started" class="getting_started"><h2>Getting started</h2>
+The best ways to get started are to either <a href="#" onmouseover="javascript: highlight('browse');" onmouseout="javascript: unhighlight('browse');">browse</a> or <a href="#" onmouseover="javascript: highlight('search');" onmouseout="javascript: unhighlight('search');">search</a> WholeCellKB using either the <a href="#" onmouseover="javascript: highlight('browse');" onmouseout="javascript: unhighlight('browse');">menu</a> or the <a href="#" onmouseover="javascript: highlight('search');" onmouseout="javascript: unhighlight('search');">search box</a> at the top of this page.</li>
+
+<li onmouseover="javascript: highlight('browse');" onmouseout="javascript: unhighlight('browse');"><h2>Browsing</h2>
+Use the menu at the top left to browse WholeCellKB.</li>
+
+<li onmouseover="javascript: highlight('search');" onmouseout="javascript: unhighlight('search');"><h2>Searching</h2>
+Use the search box at the top right to search the entire content of WholeCellKB.
+</li>
+
+<li onmouseover="javascript: highlight('actions');" onmouseout="javascript: unhighlight('actions');"><h2>Dowloading</h2>
+Use the <img src="{% get_static_prefix %}public/img/page_excel.png" alt="Excel" class="inline-icon" />, <img src="{% get_static_prefix %}public/img/json.png" alt="JSON" class="inline-icon" />, <img src="{% get_static_prefix %}public/img/page_white_acrobat.png" alt="PDF" class="inline-icon"/>, and <img src="{% get_static_prefix %}public/img/xml.gif" alt="XML" class="inline-icon" /> icons at the bottom right to download each page. Use the download button in the top-left menu to download all of WholeCellKB.
+</li>
+
+<li onmouseover="javascript: highlight('actions');" onmouseout="javascript: unhighlight('actions');"><h2>Printing</h2>
+Use the <img src="{% get_static_prefix %}public/img/printer.png" alt="printer" class="inline-icon" /> icon at the bottom right to print each page.
+</li>
+
+<li onmouseover="javascript: highlight('actions');" onmouseout="javascript: unhighlight('actions');"><h2>Editing</h2>
+Use the <img src="{% get_static_prefix %}public/img/pencil.png" alt="pencil" class="inline-icon" /> icon at the bottom right to suggest edits to each page.
+</li>
+
+<li onmouseover="javascript: highlight('help');" onmouseout="javascript: unhighlight('help');"><h2>Need more help?</h2>
+Please read the <a href="{% if species %}{% url public.views.about species_wid=species.wid %}{% else %}{% url public.views.about %}{% endif %}">about section</a> or contact us at <a href="mailto:wholecell[at]lists.stanford.edu">wholecell@lists.stanford.edu</a>.</li>
+</li>
+</ul>
+</div>
+{% endblock %}

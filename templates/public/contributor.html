@@ -1,0 +1,81 @@
+{% extends "public/base.html" %}
+
+{% comment %}
+Contributor page template
+
+Author: Jonathan Karr, jkarr@stanford.edu
+Affiliation: Covert Lab, Department of Bioengineering, Stanford University
+Last updated: 2012-07-17
+{% endcomment %}
+
+{% load static %}
+
+{% block head_title %}{% with object=queryset.0 %}{{ block.super }} :: {{ object.first_name }} {{ object.last_name }}{% endwith %}{% endblock %}
+{% block page_title %}{% with object=queryset.0 %}<a href="{% if species %}{% url public.views.contributors species_wid=species.wid %}{% else %}{% url public.views.contributors %}{% endif %}">Contributors</a> :: {{ object.first_name }} {{ object.last_name }}{% endwith %}{% endblock %}
+
+{% block action_icons %}
+{% if not request.user.is_anonymous %}
+<a href="{% url admin:auth_user_change queryset.0.id %}"><img src="{% get_static_prefix %}public/img/pencil.png" title="Edit" alt="Edit" /></a>
+{% endif %}
+{{ block.super }}
+{% endblock %}
+
+{% block content %}
+{% with object=queryset.0 profile=queryset.0.get_profile %}
+<table id="detail">
+	<tbody class="data">
+		<tr>
+			<th colspan="2">Bio</th>
+		</tr>
+		<tr>
+			<th>Name</th>
+			<td>{{ object.first_name }} {{ object.last_name }}</td>
+		</tr>
+		<tr>
+			<th>Affiliation</th>
+			<td>{{ profile.affiliation }}</td>
+		</tr>
+	</tbody>
+	<tbody class="spacing">
+		<tr><td colspan="2">&nbsp;</td></tr>
+	</tbody>
+	<tbody class="data">
+		<tr>
+			<th colspan="2">Contact info</th>
+		</tr>
+		<tr>
+			<th>Website</th>
+			<td><a href="{{ profile.website }}">{{ profile.website }}</a></td>
+		</tr>
+		<tr>
+			<th>Email</th>
+			<td><a href="mailto:{{ object.email }}">{{ object.email }}</a></td>
+		</tr>
+		<tr>
+			<th>Phone</th>
+			<td>{{ profile.phone }}</td>
+		</tr>
+		<tr>
+			<th>Address</th>
+			<td>{{ profile.address }}, {{ profile.city }} {{ profile.state }} {{ profile.zip }} {{ profile.country }}</td>
+		</tr>
+	</tbody>	
+	<tbody class="spacing">
+		<tr><td colspan="2">&nbsp;</td></tr>
+	</tbody>
+	<tbody class="data">
+		<tr>
+			<th colspan="2">Account</th>
+		</tr>
+		<tr>
+			<th>User</th>
+			<td>{{ object.username }}</td>
+		</tr>
+		<tr>
+			<th>Joined</th>
+			<td>{{ object.date_joined|date:"Y-m-d" }}</td>
+		</tr>		
+	</tbody>
+</table>
+{% endwith %}
+{% endblock %}

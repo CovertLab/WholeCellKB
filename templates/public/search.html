@@ -1,0 +1,64 @@
+{% extends "public/base.html" %}
+
+{% comment %}
+Search template
+
+Author: Jonathan Karr, jkarr@stanford.edu
+Affiliation: Covert Lab, Department of Bioengineering, Stanford University
+Last updated: 2012-07-17
+{% endcomment %}
+
+{% load static %}
+{% load templatetags %}
+
+{% block head_title %}{{ block.super }} :: Search :: "{{ query }}"{% endblock %}
+{% block page_title %}Search :: "{{ query }}"{% endblock %}
+
+{% block action_icons %}
+{% with object=queryset.0 %}
+<a href="?{% makeurl queryargs 'format' 'xlsx' %}"><img src="{% get_static_prefix %}public/img/excel.gif" title="Download in Excel format" alt="Download in Excel format" /></a>
+<a href="?{% makeurl queryargs 'format' 'json' %}"><img src="{% get_static_prefix %}public/img/json.png" title="Download in JSON format" alt="Download in JSON format" /></a>
+<a href="?{% makeurl queryargs 'format' 'xml' %}"><img src="{% get_static_prefix %}public/img/xml.gif" title="Download in XML format" alt="Download in XML format" /></a>
+{{ block.super }}
+{% endwith %}
+{% endblock %}
+
+
+{% block content %}
+{% if queryset|length == 0 %}
+<i>Sorry. Nothing matches your query "{{ query }}".</i>
+{% else %}
+<table id="list">
+<thead>
+	<tr>
+		<th>WID</th>
+		<th>Name</th>
+	</tr>
+</thead>
+<tbody>
+	{% for object in queryset %}
+	<tr>
+		<th><a href="{{ object.get_absolute_url }}">{{ object.wid }}</a></th>
+		<td><a href="{{ object.get_absolute_url }}">{{ object.name|truncatechars:80 }}</a></td>
+	</tr>
+	{% endfor %}
+</tbody>
+</table>
+
+<div id="listfilter">
+<h1>Filter</h1>
+	<div class="block">
+	<h2>Type</h2>
+	<ul>
+		<li {% if not model_type %}class="selected"{% endif %}><a href="?q={{ query }}">All</a></li>
+			{% for val in modelNameFacet %}
+			<li {% if model_type == val.name %}class="selected"{% endif %}>
+				<a href="?q={{ query }}&model_type={{ val.name }}">{{ val.verbose_name }} ({{ val.count }})</a></li>
+			{% endfor %}
+	</ul>
+	</div>
+</div>
+
+<div style="clear:both;"></div>
+{% endif %}
+{% endblock %}

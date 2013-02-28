@@ -1,0 +1,49 @@
+{% extends "public/base.html" %}
+
+{% comment %}
+Import data form template
+
+Author: Jonathan Karr, jkarr@stanford.edu
+Affiliation: Covert Lab, Department of Bioengineering, Stanford University
+Last updated: 2012-07-17
+{% endcomment %}
+
+{% load templatetags %}
+
+{% block head_title %}{{ block.super }} :: Import{% endblock %}
+{% block page_title %}Import data{% endblock %}
+{% block action_icons %}{% endblock %}
+
+{% block content %}
+<form id="form" name="importData" action="{% if species %}{% url public.views.importData species_wid=species.wid %}{% else %}{% url public.views.importData %}{% endif %}" method="post" enctype="multipart/form-data">
+	{% csrf_token %}
+	
+	<div class="block">
+		<h1>Select {{ form.species.label }}</h1>
+		<div class="content" style="width:340px;">
+			{% if form.species.errors|length > 0 %}<div class="errors">{{ form.species.errors|join:" " }}</div>{% endif %}
+			{% if form.new_species.errors|length > 0%}<div class="errors">{{ form.new_species.errors|join:" " }}</div>{% endif %}
+			<ol style="margin:0px; padding:0px; padding-left:20px;">
+			<li>Edit an existing PGDB:
+				<select class="select" name="species" id="species" style="width:192px;" onchange="javascript: document.getElementById('new_species').value='';"/>
+					<option disabled>Select a PGDB</option>
+					{% for choice in form.species.field.choices %}
+					<option value="{{ choice.0 }}"{% if choice.0 == species.wid %} selected{% endif %}><i>{{ choice.1 }}</i></option>
+					{% endfor %}
+				</select><br/><center><i>or</i></center></li>
+			<li>Create a new PGDB: <input class="text" type="text" name="new_species" id="new_species" style="width:200px;" onchange="javascript: document.getElementById('species').selectedIndex=0;"/></li>
+			</ol>
+		</div>
+	</div>
+	
+	<div class="block">
+		<h1>Select {{ form.file.label }}</h1>
+		<div class="content">
+			{% if form.file.errors|length > 0 %}<div class="errors">{{ form.file.errors|join:" " }}</div>{% endif %}
+			<input class="file" type="file" name="file" />
+		</div>
+	</div>		
+	
+	<input class="button" type="submit" value="Submit" />
+</form>
+{% endblock %}

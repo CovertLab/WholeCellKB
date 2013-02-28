@@ -1,0 +1,24 @@
+{% extends "public/base.html" %}
+
+{% comment %}
+Logout template
+
+Author: Jonathan Karr, jkarr@stanford.edu
+Affiliation: Covert Lab, Department of Bioengineering, Stanford University
+Last updated: 2012-07-17
+{% endcomment %}
+
+
+{% block head_title %}{{ block.super }} :: Logout{% endblock %}
+{% block page_title %}Logout{% endblock %}
+{% block action_icons %}{% endblock %}
+
+{% block extrastyles %}
+h1, #content{
+	text-align:center;
+}
+{% endblock %}
+
+{% block content %}
+You have successfully logged out.
+{% endblock %}
