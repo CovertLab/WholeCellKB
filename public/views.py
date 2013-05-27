@@ -54,7 +54,10 @@ def index(request, species_wid=None):
 		
 		chrs = models.Chromosome.objects.filter(species__id = species.id)
 		chrcontent = chrs.aggregate(length=Sum('length'));
-		gc_content = sum([chr.get_gc_content() * chr.length for chr in chrs]) / chrcontent['length']		
+		try:
+			gc_content = sum([chr.get_gc_content() * chr.length for chr in chrs]) / chrcontent['length']		
+		except TypeError, e:
+			gc_content = 0
 		content.append([
 			[0, 'Chromosomes', chrs.count(), None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'Chromosome'})],
 			[1, 'Length', chrcontent['length'], 'nt'],
