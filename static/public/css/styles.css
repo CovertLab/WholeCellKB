@@ -549,6 +549,10 @@ select.select{
 #detail tbody tr td ul.vertical_spacing li:last-child{
 	margin-bottom:0px;
 }
+#detail tbody tr td:last-child img{
+	position:relative;
+	top:1px;
+}
 
 /* viewPropertyInSimulation */
 #viewPropertyInSimulation .simProp{

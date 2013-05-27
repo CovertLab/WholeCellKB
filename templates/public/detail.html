@@ -63,8 +63,8 @@ Last updated: 2012-07-17
 		<tr>
 			<th>{{ field.verbose_name }}</th>			
 			<td>{{ field.data }}</td>
-			<td>{% if field.is_modeled %}
-				<a href="{% url public.views.viewPropertyInSimulation species_wid=species.wid class_name=model_type property_name=field.name %}">
+			<td>{% if field.is_modeled_url|length > 0 %}
+				<a href="{{ field.is_modeled_url }}">
 					<img src="{% get_static_prefix %}public/img/script_code.png" title="View in model" alt="View in model" />
 				</a>
 				{% endif %}

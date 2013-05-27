@@ -11,8 +11,8 @@ Last updated: 2012-07-17
 {% load static %}
 {% load templatetags %}
 
-{% block head_title %}{{ block.super }} :: View "{{ verbose_class_name }} &ndash; {{ verbose_property_name}}" in simulation code{% endblock %}
-{% block page_title %}View "{{ verbose_class_name }} &ndash; {{ verbose_property_name}}" in simulation code{% endblock %}
+{% block head_title %}{{ block.super }} :: View {{ verbose_class_name }}: {{ verbose_property_name}} in simulation code{% endblock %}
+{% block page_title %}View {{ verbose_class_name }}: {{ verbose_property_name}} in simulation code{% endblock %}
 
 {% block content %}
 <div><i>Associated simulation properties are highlighted in the class definitions below.</i></div>
