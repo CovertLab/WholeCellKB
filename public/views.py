@@ -42,6 +42,7 @@ import os
 import settings
 import tempfile
 
+MODEL_CODE_BASE_DIR = '/home/projects/WholeCell/simulation'
 
 def index(request, species_wid=None):
 	if species_wid is not None and species_wid != '':
@@ -609,7 +610,11 @@ def viewPropertyInSimulation(request, species_wid, class_name, property_name):
 		property_names = classes[class_name]
 		property_names.sort()
 		pathParts = class_name.split('.')
-		codePath = "/home/projects/WholeCell/simulation/src/+%s/%s.m" % ('/+'.join(pathParts[0:-1]), pathParts[-1])
+		codePath = "%s/src/+%s/%s.m" % (MODEL_CODE_BASE_DIR, '/+'.join(pathParts[0:-1]), pathParts[-1])
+		if not os.path.isfile(codePath):
+			codePath = "%s/src/+%s/@%s/%s.m" % (MODEL_CODE_BASE_DIR, '/+'.join(pathParts[0:-1]), pathParts[-1], pathParts[-1])
+			if not os.path.isfile(codePath):
+				continue
 		
 		with open (codePath, "r") as codeFile:
 			code = codeFile.read()
