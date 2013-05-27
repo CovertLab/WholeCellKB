@@ -2310,7 +2310,10 @@ class Process(SpeciesComponent):
 			('Name', {'fields': ['wid', 'name', 'synonyms', 'cross_references']}), 
 			('Classification', {'fields': ['type']}),
 			('Implementation', {'fields': ['initialization_order']}), 
-			('Reactions', {'fields': [{'verbose_name': 'Chemical reactions', 'name': 'reactions'}, {'verbose_name': 'Complex formation reactions', 'name': 'formed_complexes'}]}),
+			('Reactions', {'fields': [
+				{'verbose_name': 'Chemical reactions', 'name': 'reactions'}, 
+				{'verbose_name': 'Complex formation reactions', 'name': 'formed_complexes'},
+				]}),
 			('Parameters', {'fields': ['parameters']}),
 			('Comments', {'fields': ['comments', 'references']}),
 			('Metadata', {'fields': [{'verbose_name': 'Created', 'name': 'created_user'}, {'verbose_name': 'Last updated', 'name': 'last_updated_user'}]}),

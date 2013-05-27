@@ -589,27 +589,43 @@ def detail(request, species_wid, wid):
 			})
 
 def viewPropertyInSimulation(request, species_wid, class_name, property_name):
+	#get model
 	model = getModel(class_name)
+	
+	#get verbose class name
 	verbose_class_name = model._meta.verbose_name
-	verbose_property_name = model._meta.get_field_by_name(property_name)[0].verbose_name
+	
+	#get verbose property name
+	verbose_property_name = property_name
+	for fieldset in model._meta.fieldsets:
+		for field in fieldset[1]['fields']:
+			if isinstance(field, (str, unicode)) and field == property_name:
+				tmp = model._meta.get_field_by_name(property_name)
+				if len(tmp) > 0:
+					verbose_property_name = tmp[0].verbose_name
+			if isinstance(field, dict) and field['name'] == property_name:
+				verbose_property_name = field['verbose_name']
 
+	#get associated simulation code properties
 	qs = ModelProperty.objects.get(
 		species__wid = species_wid,
 		class_name = class_name,
 		property_name = property_name
 		).simulation_properties.all().order_by('class_name', 'property_name')
 		
+	#organize simulation code properties by class
 	classes = {}
 	for object in qs:
 		if not classes.has_key(object.class_name):
 			classes[object.class_name] = []
 		classes[object.class_name].append(object.property_name)
 		
+	#highlight code for each simulation class
 	object_list = []
-	for class_name in classes:
-		property_names = classes[class_name]
-		property_names.sort()
-		pathParts = class_name.split('.')
+	for sim_class_name in classes:
+		sim_property_names = classes[sim_class_name]
+		sim_property_names.sort()
+		pathParts = sim_class_name.split('.')
 		codePath = "%s/src/+%s/%s.m" % (MODEL_CODE_BASE_DIR, '/+'.join(pathParts[0:-1]), pathParts[-1])
 		if not os.path.isfile(codePath):
 			codePath = "%s/src/+%s/@%s/%s.m" % (MODEL_CODE_BASE_DIR, '/+'.join(pathParts[0:-1]), pathParts[-1], pathParts[-1])
@@ -620,16 +636,17 @@ def viewPropertyInSimulation(request, species_wid, class_name, property_name):
 			code = codeFile.read()
 
 		lexer = MatlabLexer()
-		lexer.add_filter(PropertyDefinitionFilter(property_names = property_names, tokentype=Token.Name.Variable)) 
+		lexer.add_filter(PropertyDefinitionFilter(property_names = sim_property_names, tokentype=Token.Name.Variable)) 
 		
 		tokens = lexer.get_tokens(code)
 			
 		object_list.append({
-			'class_name': class_name,
-			'property_names': property_names,
+			'class_name': sim_class_name,
+			'property_names': sim_property_names,
 			'code': pygments.format(tokens, PygmentsFormatter(linenos='inline', linenostep=1, style=PygmentsStyle, noclasses=True)),
 			})
-		
+	
+	#render response
 	return render_queryset_to_response(
 		species_wid = species_wid,		
 		request = request, 
