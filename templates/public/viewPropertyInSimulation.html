@@ -11,18 +11,27 @@ Last updated: 2012-07-17
 {% load static %}
 {% load templatetags %}
 
-{% block head_title %}{{ block.super }} :: View property in simulation &ndash; {{ verbose_class_name }} : {{ verbose_property_name}}  {% endblock %}
-{% block page_title %}View property in simulation &ndash; {{ verbose_class_name }} : {{ verbose_property_name}}{% endblock %}
+{% block head_title %}{{ block.super }} :: View "{{ verbose_class_name }} &ndash; {{ verbose_property_name}}" in simulation code{% endblock %}
+{% block page_title %}View "{{ verbose_class_name }} &ndash; {{ verbose_property_name}}" in simulation code{% endblock %}
 
 {% block content %}
 <div><i>Associated simulation properties are highlighted in the class definitions below.</i></div>
 
 {% autoescape off %}
 <div id="viewPropertyInSimulation">
-{% for object in queryset %}
+{% for object in object_list %}
 <div class="simProp">
-	<div class="simPropHeader">Simulation instance #{{ forloop.counter }} &ndash; <tt>{{ object.class_name }}:{{object.property_name }}</tt></div>
-	<div class="simPropContent"><div>{{ object.get_as_html_code }}</div></div>
+	<div class="simPropHeader">
+		Class: <tt>{{ object.class_name }}</tt><br/>
+		Properties: <tt>
+			{% for property_name in object.property_names %}
+			<ul style="list-style:none; padding-left:5px; font-weight:normal;">
+			<li>.{{ property_name }}</li>
+			</ul>
+			{% endfor %}
+			</tt>
+	</div>
+	<div class="simPropContent"><div>{{ object.code }}</div></div>
 </div>
 {% endfor %}
 </div>

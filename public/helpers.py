@@ -921,6 +921,7 @@ def batch_import_from_excel(species_wid, fileName, user):
 			data[model.__name__] = []
 	
 	if len(set(new_wids_list)) < len(new_wids_list):
+		print new_wids_list
 		raise ValidationError('WIDs must be unique')
 	if len(set(new_wids_list) & set(old_wids_list)) > 0:
 		raise ValidationError('WIDs not unique: %s' % ', '.join(set(new_wids_list) & set(old_wids_list)))
