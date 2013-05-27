@@ -60,7 +60,7 @@ select.select{
 	text-align:right;
 }
 .sequence div:nth-child(2){
-	font-family:courier;
+	font-family:Courier New;
 	margin-right:10px;
 	margin-left:10px;
 }
@@ -509,10 +509,15 @@ select.select{
 #detail tbody.data tr th{
 	border-left:1px solid #3d80b3;
 }
-#detail tbody.data tr td{
+#detail tbody.data tr td:nth-child(2){
 	border-left:1px solid #3d80b3;
 	border-right:1px solid #3d80b3;
 	width:100%;
+}
+#detail tbody.data tr td:last-child{
+	border-right:1px solid #3d80b3;
+	text-align:center;
+	min-width:20px;
 }
 #detail tbody.spacing tr td{
 	border:none;
@@ -544,6 +549,35 @@ select.select{
 #detail tbody tr td ul.vertical_spacing li:last-child{
 	margin-bottom:0px;
 }
+
+/* viewPropertyInSimulation */
+#viewPropertyInSimulation .simProp{
+	border-radius:6px;
+	border: 1px solid #3d80b3;
+	margin-top:20px;
+}
+#viewPropertyInSimulation .simProp .simPropHeader{
+	border-top-left-radius:6px;
+	border-top-right-radius:6px;
+	background:#3d80b3;
+	border:1px solid #3d80b3;
+	color:white;
+	padding:2px;
+	font-weight:bold;	
+}
+#viewPropertyInSimulation .simProp .simPropContent{
+	border-bottom-left-radius:6px;
+	border-bottom-right-radius:6px;
+	padding:10px;
+	padding-top:0px;
+	max-height:400px;
+	overflow-y:auto;
+}
+#viewPropertyInSimulation .simProp .simPropContent .linenodiv{
+	color:#999;
+	max-width:10px;
+}
+
 
 /* import/export content */
 #form{

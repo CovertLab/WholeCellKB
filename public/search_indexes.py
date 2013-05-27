@@ -108,5 +108,5 @@ for modelname, model in getModels().iteritems():
 	else:
 		index = type(model.__class__.__name__ + 'Index', (EntryIndex, ), {})
 	
-	#register index
+	#register index	
 	site.register(model, index)

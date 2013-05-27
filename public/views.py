@@ -11,7 +11,7 @@ from django.contrib.auth import login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from django.db.models import Count, Sum, Avg
 from django.db.models.fields import BooleanField, NullBooleanField, AutoField, BigIntegerField, DecimalField, FloatField, IntegerField, PositiveIntegerField, PositiveSmallIntegerField, SmallIntegerField
@@ -29,7 +29,7 @@ from public import models
 from public.forms import ExportDataForm, ImportDataForm
 from public.helpers import getEntry, format_field_detail_view, objectToQuerySet, render_queryset_to_response, getObjectTypes, getModel, get_invalid_objects, get_edit_form_fields, get_edit_form_data
 from public.helpers import validate_object_fields, validate_model_objects, validate_model_unique, save_object_data, batch_import_from_excel, readFasta
-from public.models import Entry, Species, SpeciesComponent, Reference
+from public.models import Entry, Species, SpeciesComponent, Reference, ModelProperty, SimulationProperty
 from urlparse import urlparse
 import numpy
 import os
@@ -301,13 +301,13 @@ def index(request, species_wid=None):
 		sources['evidence_temperature'] = models.Evidence.objects.filter(species_component__species__id = species.id).values('temperature').annotate(count = Count('id'))
 			
 	return render_queryset_to_response(
+		request = request, 
 		species_wid = species_wid,
 		data = {
 			'content': [contentCol1, contentCol2, contentCol3],
 			'contentRows': range(max(len(contentCol1), len(contentCol2), len(contentCol3))),
 			'sources': sources,			
-			},
-		request = request, 
+			},		
 		templateFile = 'public/index.html')
 	
 def about(request, species_wid=None):
@@ -365,7 +365,7 @@ def search_haystack(request, species_wid, query):
 	facets = results.facet('model_type')
 	tmp = facets.facet_counts()['fields']['model_type']
 	modelNameFacet = []
-	objectTypes = getObjectTypes()
+	objectTypes = getObjectTypes(is_public=request.user.is_anonymous())
 	models = []
 	for tmp2 in tmp:
 		modelName = objectTypes[objectTypes.index(tmp2[0])]
@@ -418,7 +418,7 @@ def search_google(request, species_wid, query):
 
 def list(request, species_wid, model_type):
 	try:
-		getObjectTypes().index(model_type)
+		getObjectTypes(is_public=request.user.is_anonymous()).index(model_type)
 	except ValueError:
 		raise Http404
 		
@@ -538,8 +538,22 @@ def detail(request, species_wid, wid):
 			data = format_field_detail_view(obj, field_name, request.user.is_anonymous())
 			if (data is None) or (data == ''):
 				rmfields = [idx2] + rmfields
-			
-			fieldsets[idx][1]['fields'][idx2] = {'verbose_name': verbose_name.replace(" ", '&nbsp;').replace("-", "&#8209;"), 'data': data}
+				
+			try:
+				is_modeled = ModelProperty.objects.get(
+					species__wid = species_wid,
+					class_name = model_type,
+					property_name = field_name
+					).simulation_properties.exists()
+			except ObjectDoesNotExist:
+				is_modeled = False
+				
+			fieldsets[idx][1]['fields'][idx2] = {
+				'name': field_name,
+				'verbose_name': verbose_name.replace(" ", '&nbsp;').replace("-", "&#8209;"), 
+				'data': data,
+				'is_modeled': is_modeled,
+				}
 		for idx2 in rmfields:
 			del fieldsets[idx][1]['fields'][idx2]
 		if len(fieldsets[idx][1]['fields']) == 0:
@@ -563,7 +577,31 @@ def detail(request, species_wid, wid):
 			'fieldsets': fieldsets,
 			'message': request.GET.get('message', ''),
 			})
-			
+
+def viewPropertyInSimulation(request, species_wid, class_name, property_name):
+	model = getModel(class_name)
+	verbose_class_name = model._meta.verbose_name
+	verbose_property_name = model._meta.get_field_by_name(property_name)[0].verbose_name
+
+	qs = ModelProperty.objects.get(
+		species__wid = species_wid,
+		class_name = class_name,
+		property_name = property_name
+		).simulation_properties.all().order_by('class_name', 'property_name')
+		
+	return render_queryset_to_response(
+		species_wid = species_wid,		
+		request = request, 
+		models = [SimulationProperty],
+		queryset = qs,
+		templateFile = 'public/viewPropertyInSimulation.html', 
+		data = {
+			'class_name': class_name,
+			'property_name': property_name,
+			'verbose_class_name': verbose_class_name,
+			'verbose_property_name': verbose_property_name,
+			})
+
 @login_required		
 def add(request, model_type, species_wid=None):
 	return edit(request, model_type=model_type, species_wid=species_wid, action='add')
@@ -681,11 +719,11 @@ def delete(request, species_wid, wid):
 			}
 		)
 
-def exportData(request, species_wid=None):
+def exportData(request, species_wid=None):	
 	getDict = request.GET.copy()
 	if getDict.get('format', ''):
 		getDict.__setitem__('species', getDict.get('species', species_wid))	
-	form = ExportDataForm(getDict or None)
+	form = ExportDataForm(request.user.is_anonymous(), getDict or None)
 	if not form.is_valid():		
 		return render_queryset_to_response(
 			species_wid=species_wid,
@@ -699,9 +737,8 @@ def exportData(request, species_wid=None):
 		species = Species.objects.get(wid = form.cleaned_data['species'])
 		queryset = EmptyQuerySet()
 		models = []
-		
-		if form.cleaned_data['all_model_types'] == 'True':
-			model_types = getObjectTypes()
+		if form.cleaned_data['all_model_types'] == 'True':			
+			model_types = getObjectTypes(superclass=Entry, is_public = request.user.is_anonymous())
 		else:
 			model_types = form.cleaned_data['model_type']
 		

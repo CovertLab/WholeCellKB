@@ -57,12 +57,18 @@ Last updated: 2012-07-17
 		{% endif %}
 	<tbody class="data">
 		<tr>
-			<th colspan="2">{{ fieldset.0 }}</th>
+			<th colspan="3">{{ fieldset.0 }}			</th>
 		</tr>				
 		{% for field in fieldset.1.fields %}
-		<tr>			
-			<th>{{ field.verbose_name }}</th>
+		<tr>
+			<th>{{ field.verbose_name }}</th>			
 			<td>{{ field.data }}</td>
+			<td>{% if field.is_modeled %}
+				<a href="{% url public.views.viewPropertyInSimulation species_wid=species.wid class_name=model_type property_name=field.name %}">
+					<img src="{% get_static_prefix %}public/img/script_code.png" title="View in model" alt="View in model" />
+				</a>
+				{% endif %}
+			</td>
 		</tr>
 		{% endfor %}
 	</tbody>

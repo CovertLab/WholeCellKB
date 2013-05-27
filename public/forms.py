@@ -59,7 +59,7 @@ class ExportDataForm(forms.Form):
 		help_text = 'Select an output format'
 		)
 	
-	def __init__(self, *args, **kwargs):
+	def __init__(self, is_public, *args, **kwargs):
 		super(ExportDataForm, self).__init__(*args, **kwargs)
 		
 		choices = []
@@ -67,8 +67,8 @@ class ExportDataForm(forms.Form):
 			choices.append((species['wid'], species['name'], ))
 		self.fields['species'].choices = choices
 		
-		model_types = getObjectTypes()
-		models = getModels()
+		model_types = getObjectTypes(is_public=is_public)
+		models = getModels(is_public=is_public)
 		choices = []
 		for model_type in model_types:
 			choices.append((model_type, models[model_type]._meta.verbose_name_plural, ))

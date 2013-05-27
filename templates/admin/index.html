@@ -19,7 +19,7 @@
         <table summary="{% blocktrans with name=app.name %}Models available in the {{ name }} application.{% endblocktrans %}">        
 		<caption><a href="{{ app.app_url }}" class="section">{% blocktrans with name=app.name %}{{ name }} &ndash; primary models{% endblocktrans %}</a></caption>
 		{% for model in app.models %}
-			{% with result=model.name|is_concrete_kbobject:app.name %}
+			{% with result=model.name|is_concrete_entry:app.name %}
 			{% if result %}
             <tr>
             {% if model.admin_url %}
@@ -49,7 +49,7 @@
         <table summary="{% blocktrans with name=app.name %}Models available in the {{ name }} application.{% endblocktrans %}">        
 		<caption><a href="{{ app.app_url }}" class="section">{% blocktrans with name=app.name %}{{ name }} &ndash; accessory models{% endblocktrans %}</a></caption>
 		{% for model in app.models %}
-			{% with result=model.name|is_concrete_kbobject:app.name %}
+			{% with result=model.name|is_concrete_entry:app.name %}
 			{% if not result %}
             <tr>
             {% if model.admin_url %}

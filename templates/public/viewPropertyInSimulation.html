@@ -1,0 +1,30 @@
+{% extends "public/base.html" %}
+
+{% comment %}
+viewPropertyInSimulation page template
+
+Author: Jonathan Karr, jkarr@stanford.edu
+Affiliation: Covert Lab, Department of Bioengineering, Stanford University
+Last updated: 2012-07-17
+{% endcomment %}
+
+{% load static %}
+{% load templatetags %}
+
+{% block head_title %}{{ block.super }} :: View property in simulation &ndash; {{ verbose_class_name }} : {{ verbose_property_name}}  {% endblock %}
+{% block page_title %}View property in simulation &ndash; {{ verbose_class_name }} : {{ verbose_property_name}}{% endblock %}
+
+{% block content %}
+<div><i>Associated simulation properties are highlighted in the class definitions below.</i></div>
+
+{% autoescape off %}
+<div id="viewPropertyInSimulation">
+{% for object in queryset %}
+<div class="simProp">
+	<div class="simPropHeader">Simulation instance #{{ forloop.counter }} &ndash; <tt>{{ object.class_name }}:{{object.property_name }}</tt></div>
+	<div class="simPropContent"><div>{{ object.get_as_html_code }}</div></div>
+</div>
+{% endfor %}
+</div>
+{% endautoescape %}
+{% endblock %}

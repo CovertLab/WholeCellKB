@@ -15,8 +15,8 @@ admin.autodiscover()
 
 # admin interface
 urlpatterns = patterns('',
-	url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
-	url(r'^admin/', include(admin.site.urls)),
+	url(r'^admin/doc/*', include('django.contrib.admindocs.urls')),
+	url(r'^admin/*', include(admin.site.urls)),
 )
 
 # authentication
@@ -46,6 +46,7 @@ urlpatterns += patterns('public.views',
 	url(r'^search/(?P<species_wid>[a-zA-Z0-9_\-]+)/*', 'search'),
 	url(r'^list/(?P<species_wid>[a-zA-Z0-9_\-]+)/(?P<model_type>\w+)/*$', 'list'),	
 	url(r'^detail/(?P<species_wid>[a-zA-Z0-9_\-]+)/(?P<wid>[a-zA-Z0-9_\-]+)/*$', 'detail'),
+	url(r'^viewPropertyInSimulation/(?P<species_wid>[a-zA-Z0-9_\-]+)/(?P<class_name>[a-zA-Z0-9_]+)/(?P<property_name>[a-zA-Z0-9_]+)/*$', 'viewPropertyInSimulation'),
 	url(r'^edit/(?P<species_wid>[a-zA-Z0-9_\-]+)/(?P<wid>[a-zA-Z0-9_\-]+)/*$', 'edit'),
 	url(r'^delete/(?P<species_wid>[a-zA-Z0-9_\-]+)/(?P<wid>[a-zA-Z0-9_\-]+)/*$', 'delete'),
 	url(r'^add/(?P<species_wid>[a-zA-Z0-9_\-]+)/(?P<model_type>[a-zA-Z0-9_]+)/*$', 'add'),

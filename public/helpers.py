@@ -238,19 +238,19 @@ class Colors(HashableObject):
 		super(Color, self).__init__()
 		self.index = index
 
-def getModels(superclass=Entry):
+def getModels(superclass=Entry, is_public=False):
 	tmp = get_models(get_app('public'))
 	tmp2 = {}
 	for model in tmp:
-		if issubclass(model, superclass) and model._meta.concrete_entry_model:
+		if issubclass(model, superclass) and model._meta.concrete_entry_model and (not is_public or not (hasattr(model._meta, 'hide_public') and model._meta.hide_public)):
 			tmp2[model.__name__] = model
 	return tmp2
 
-def get_models_in_saving_order(superclass=Entry):
+def get_models_in_saving_order(superclass=Entry, is_public=False):
 	all_models = get_models(get_app('public'))
 	entry_models = []
 	for model in all_models:
-		if issubclass(model, superclass) and model._meta.concrete_entry_model:
+		if issubclass(model, superclass) and model._meta.concrete_entry_model and (not is_public or not (hasattr(model._meta, 'hide_public') and model._meta.hide_public)):
 			entry_models.append(model)
 
 	return sorted(entry_models, cmp=model_save_order_comparator)
@@ -276,19 +276,19 @@ def is_model_referenced(model, referenced_model, checked_models=[]):
 				return True
 	return False
 
-def getModelsMetadata(superclass=Entry):
+def getModelsMetadata(superclass=Entry, is_public=False):
 	tmp = get_models(get_app('public'))
 	tmp2 = {}
 	for model in tmp:
-		if issubclass(model, superclass) and model._meta.concrete_entry_model:
+		if issubclass(model, superclass) and model._meta.concrete_entry_model and (not is_public or not (hasattr(model._meta, 'hide_public') and model._meta.hide_public)):
 			tmp2[model.__name__] = model._meta
 	return tmp2
 
-def getObjectTypes(superclass=Entry):
+def getObjectTypes(superclass=Entry, is_public=False):
 	tmp = get_models(get_app('public'))
 	tmp2 = []
 	for model in tmp:
-		if issubclass(model, superclass) and model._meta.concrete_entry_model:
+		if issubclass(model, superclass) and model._meta.concrete_entry_model and (not is_public or not (hasattr(model._meta, 'hide_public') and model._meta.hide_public)):
 			tmp2.append(model.__name__)
 	tmp2.sort()
 	return tmp2
@@ -392,7 +392,7 @@ From http://www.peterbe.com/plog/uniqifiers-benchmark
 def uniqueSorted(seq):
 	return {}.fromkeys(seq).keys()
 
-def render_queryset_to_response(request = [], queryset = EmptyQuerySet(), models = [], templateFile = '', data = {}, species_wid=None):
+def render_queryset_to_response(request = [], queryset = EmptyQuerySet(), models = [], templateFile = '', data = {}, species_wid=None):	
 	format = request.GET.get('format', 'html')
 	
 	if species_wid is not None and species_wid != '':
@@ -415,8 +415,8 @@ def render_queryset_to_response(request = [], queryset = EmptyQuerySet(), models
 		data['is_pdf'] = False
 		data['pdfstyles'] = ''
 		data['species_list'] = Species.objects.all()
-		data['modelmetadatas'] = getModelsMetadata(SpeciesComponent)
-		data['modelnames'] = getObjectTypes(SpeciesComponent)
+		data['modelmetadatas'] = getModelsMetadata(SpeciesComponent, request.user.is_anonymous())
+		data['modelnames'] = getObjectTypes(SpeciesComponent, request.user.is_anonymous())
 		data['last_updated_date'] = datetime.datetime.fromtimestamp(os.path.getmtime(settings.TEMPLATE_DIRS[0] + '/' + templateFile))
 		
 		return render_to_response(templateFile, data, context_instance = RequestContext(request))
@@ -448,8 +448,8 @@ def render_queryset_to_response(request = [], queryset = EmptyQuerySet(), models
 		data['is_pdf'] = True
 		data['pdfstyles'] = ''
 		data['species_list'] = Species.objects.all()
-		data['modelmetadatas'] = getModelsMetadata(SpeciesComponent)
-		data['modelnames'] = getObjectTypes(SpeciesComponent)
+		data['modelmetadatas'] = getModelsMetadata(SpeciesComponent, request.user.is_anonymous())
+		data['modelnames'] = getObjectTypes(SpeciesComponent, request.user.is_anonymous())
 
 		for fileName in ['styles', 'styles.print', 'styles.pdf']:
 			f = open(settings.STATICFILES_DIRS[0] + '/public/css/' + fileName + '.css', 'r')
@@ -904,9 +904,11 @@ def batch_import_from_excel(species_wid, fileName, user):
 	if species_id is not None:
 		qs = SpeciesComponent.objects.values('wid', 'model_type').filter(species__id=species_id)
 		for model in models:
-			for obj_data in data[model.__name__]:
-				if obj_data['id'] is not None:
-					qs = qs.exclude(id=obj_data['id'])
+			if data.has_key(model.__name__):
+				for obj_data in data[model.__name__]:
+					if obj_data['id'] is not None:
+						qs = qs.exclude(id=obj_data['id'])
+						
 		for x in qs:
 			old_wids_list.append(x['wid'])
 					

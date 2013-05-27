@@ -13,3 +13,6 @@ xapian_index/*.baseB
 xapian_index/*.DB
 xapian_index/flintlock
 xapian_index/iamchert
+
+#log
+log/*
