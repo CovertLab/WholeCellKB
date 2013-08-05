@@ -15,6 +15,10 @@ Last updated: 2012-07-17
 {% block action_icons %}{% endblock %}
 
 {% block content %}
+<div style="margin-bottom:20px; margin-top:-10px;">
+<a href="{% url public.views.exportDataTemplate %}">Download Excel template</a>
+</div>
+
 <form id="form" name="importData" action="{% if species %}{% url public.views.importData species_wid=species.wid %}{% else %}{% url public.views.importData %}{% endif %}" method="post" enctype="multipart/form-data">
 	{% csrf_token %}
 	

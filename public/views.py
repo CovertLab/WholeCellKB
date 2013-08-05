@@ -28,12 +28,13 @@ from itertools import chain
 from public import models
 from public.forms import ExportDataForm, ImportDataForm
 from public.helpers import getEntry, format_field_detail_view, objectToQuerySet, render_queryset_to_response, getObjectTypes, getModel, get_invalid_objects, get_edit_form_fields, get_edit_form_data
-from public.helpers import validate_object_fields, validate_model_objects, validate_model_unique, save_object_data, batch_import_from_excel, readFasta
-from public.helpers import PropertyDefinitionFilter, PygmentsStyle, PygmentsFormatter
+from public.helpers import validate_object_fields, validate_model_objects, validate_model_unique, save_object_data, batch_import_from_excel, readFasta, writeExcel
 from public.models import Entry, Parameter, Reference, Species, SpeciesComponent, ModelProperty, SimulationProperty
+from public.helpers import PropertyDefinitionFilter, PygmentsStyle, PygmentsFormatter
 import pygments
 from pygments.lexers import MatlabLexer
 from pygments.token import Token
+from StringIO import StringIO
 from urlparse import urlparse
 import numpy
 import os
@@ -945,6 +946,30 @@ def exportData(request, species_wid=None):
 			queryset = queryset, 
 			templateFile = 'public/exportDataResult.html', 
 			models = models)
+			
+def exportDataTemplate(request):
+	queryset = EmptyQuerySet()
+	models = []
+	
+	for model_type in getObjectTypes():
+		models.append(getModel(model_type))
+		
+	#write work book
+	wb = writeExcel(
+		Species(wid = '__NEW__', name = 'New species'),
+		queryset, models, request.user.is_anonymous())
+
+	#save to string
+	result = StringIO()
+	wb.save(filename = result)
+
+	#generate HttpResponse
+	response = HttpResponse(
+		result.getvalue(),
+		mimetype = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+		content_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	response['Content-Disposition'] = "attachment; filename=data.xlsx"
+	return response
 
 @login_required
 def importData(request, species_wid=None):

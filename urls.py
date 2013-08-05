@@ -56,6 +56,7 @@ urlpatterns += patterns('public.views',
 	
 	url(r'^export/*$', 'exportData'),
 	url(r'^export/(?P<species_wid>[a-zA-Z0-9_\-]+)/*$', 'exportData'),
+	url(r'^exportTemplate/*$', 'exportDataTemplate'),
 	
 	url(r'^import/*$', 'importData'),
 	url(r'^import/(?P<species_wid>[a-zA-Z0-9_\-]+)/*$', 'importData'),
