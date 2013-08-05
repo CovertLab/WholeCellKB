@@ -1139,14 +1139,19 @@ def read_excel_data(filename):
 								if value == '':
 									value = None
 								else:
-									value = simplejson.loads(value)
+									try:
+										value = simplejson.loads(value)
+									except ValueError as error:
+										errors.append('Invalid JSON at field %s of %s %s at cell %s%s' % (field.name, modelname, obj['wid'], get_column_letter(iCol+1), iRow+1, ))
 							elif isinstance(subfield, ManyToManyField):
 								value = ws.cell(row=iRow, column=iCol2).value
 								if value is None or value  == '':
 									value = []
 								else:
-									value = simplejson.loads('[' + value + ']')
-							
+									try:
+										value = simplejson.loads('[' + value + ']')
+									except ValueError as error:
+										errors.append('Invalid JSON at field %s of %s %s at cell %s%s' % (field.name, modelname, obj['wid'], get_column_letter(iCol+1), iRow+1, ))
 							obj[field.name][subfield.name] = value
 							
 							if value is not None and not (isinstance(value, (str, unicode)) and value == '') and not (isinstance(value, list) and len(value) == 0):
@@ -1168,8 +1173,8 @@ def read_excel_data(filename):
 						else:
 							try:
 								obj[field.name] = simplejson.loads('[' + value + ']')
-							except:
-								errors.append('Invalid json at field %s of %s %s at cell %s%s' % (field.name, modelname, obj['wid'], get_column_letter(iCol+1), iRow+1, ))
+							except ValueError as error:
+								errors.append('Invalid JSON at field %s of %s %s at cell %s%s' % (field.name, modelname, obj['wid'], get_column_letter(iCol+1), iRow+1, ))
 			
 			newobjects[modelname].append(obj)
 	
