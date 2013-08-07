@@ -872,7 +872,10 @@ def format_value_excel(obj, field, depth = 0):
 				value.append(subvalue)
 				
 			if depth == 0:
-				value = simplejson.dumps(value)[1:-1]
+				if hasattr(obj, 'get_as_text_%s' % field.name):
+					value = getattr(obj, 'get_as_text_%s' % field.name)(getattr(obj, field.name))
+				else:
+					value = simplejson.dumps(value)[1:-1]
 	else:
 		raise Exception('%s class not supported' % field.__class__.__name__)
 
@@ -926,8 +929,18 @@ def batch_import_from_excel(species_wid, fileName, user):
 			data[model.__name__] = []
 	
 	if len(set(new_wids_list)) < len(new_wids_list):
-		print new_wids_list
-		raise ValidationError('WIDs must be unique')
+		tmp = {}
+		for wid in new_wids_list:
+			if not tmp.has_key(wid):
+				tmp[wid] = 0
+			tmp[wid] = tmp[wid] + 1
+			
+		tmp2 = []
+		for wid, cnt in tmp.iteritems():
+			if cnt > 1:
+				tmp2.append(wid)
+		
+		raise ValidationError('WIDs not unique: %s' % ', '.join(tmp2))
 	if len(set(new_wids_list) & set(old_wids_list)) > 0:
 		raise ValidationError('WIDs not unique: %s' % ', '.join(set(new_wids_list) & set(old_wids_list)))
 		
@@ -999,22 +1012,37 @@ def batch_import_from_excel(species_wid, fileName, user):
 	for model in models:
 		for obj_data in data[model.__name__]:
 			if obj_data['id'] is None:
-				obj = model()				
+				obj = model()
 			else:
 				obj = model.objects.get(id = obj_data['id'])
-			obj_list[obj_data['wid']] = save_object_data(species_wid, obj, obj_data, obj_list, user, save=False, save_m2m=False)
+			try:
+				obj_list[obj_data['wid']] = save_object_data(species_wid, obj, obj_data, obj_list, user, save=False, save_m2m=False)
+			except ValidationError as error:
+				errors = []
+				errors.append('Commit error: %s %s (%s) invalid: %s' % (model.__name__, obj_data['wid'], obj_data, format_error_as_html_list(error)))
+				raise ValidationError(format_list_html(errors))	
 			
 	#base
 	for model in models:
 		for obj_data in data[model.__name__]:
-			obj = obj_list[obj_data['wid']]			
-			obj_list[obj_data['wid']] = save_object_data(species_wid, obj, obj_data, obj_list, user, save=True, save_m2m=False)
+			obj = obj_list[obj_data['wid']]	
+			try:
+				obj_list[obj_data['wid']] = save_object_data(species_wid, obj, obj_data, obj_list, user, save=True, save_m2m=False)
+			except ValidationError as error:
+				errors = []
+				errors.append('Foreign key error: %s %s (%s) invalid: %s' % (model.__name__, obj_data['wid'], obj_data, format_error_as_html_list(error)))
+				raise ValidationError(format_list_html(errors))
 	
 	#relations
 	for model in models:
 		for obj_data in data[model.__name__]:
 			obj = obj_list[obj_data['wid']]
-			obj_list[obj_data['wid']] = save_object_data(species_wid, obj, obj_data, obj_list, user, save=True, save_m2m=True)
+			try:
+				obj_list[obj_data['wid']] = save_object_data(species_wid, obj, obj_data, obj_list, user, save=True, save_m2m=True)
+			except ValidationError as error:
+				errors = []
+				errors.append('Many to many field error: %s %s (%s) invalid: %s' % (model.__name__, obj_data['wid'], obj_data, format_error_as_html_list(error)))
+				raise ValidationError(format_list_html(errors))
 		
 def read_excel_data(filename):
 	#read workbook
@@ -1141,7 +1169,7 @@ def read_excel_data(filename):
 								else:
 									try:
 										value = simplejson.loads(value)
-									except ValueError as error:
+									except:
 										errors.append('Invalid JSON at field %s of %s %s at cell %s%s' % (field.name, modelname, obj['wid'], get_column_letter(iCol+1), iRow+1, ))
 							elif isinstance(subfield, ManyToManyField):
 								value = ws.cell(row=iRow, column=iCol2).value
@@ -1150,7 +1178,7 @@ def read_excel_data(filename):
 								else:
 									try:
 										value = simplejson.loads('[' + value + ']')
-									except ValueError as error:
+									except:
 										errors.append('Invalid JSON at field %s of %s %s at cell %s%s' % (field.name, modelname, obj['wid'], get_column_letter(iCol+1), iRow+1, ))
 							obj[field.name][subfield.name] = value
 							
@@ -1172,9 +1200,12 @@ def read_excel_data(filename):
 							obj[field.name] = []
 						else:
 							try:
-								obj[field.name] = simplejson.loads('[' + value + ']')
-							except ValueError as error:
-								errors.append('Invalid JSON at field %s of %s %s at cell %s%s' % (field.name, modelname, obj['wid'], get_column_letter(iCol+1), iRow+1, ))
+								if hasattr(model.objects, 'set_from_text_%s' % field.name):
+									obj[field.name] = getattr(model.objects, 'set_from_text_%s' % field.name)(value)
+								else:
+									obj[field.name] = simplejson.loads('[' + value + ']')
+							except Exception as error:
+								errors.append('Invalid JSON at field %s of %s %s at cell %s%s: %s' % (field.name, modelname, obj['wid'], get_column_letter(iCol+1), iRow+1, str(error)))
 			
 			newobjects[modelname].append(obj)
 	
@@ -1667,9 +1698,12 @@ def validate_object_fields(model, data, wids, species_wid, entry_wid):
 					else:
 						data[field.name] = field.clean(None, None)
 				
-		except ValidationError as error:
-			errors[field.name] = ', '.join(error.messages)
-	
+		except Exception as error:
+			if isinstance(error, ValidationError):
+				errors[field.name] = ', '.join(error.messages)
+			else:
+				errors[field.name] = ', '.join(str(error))
+				
 	if len(errors) > 0:
 		raise ValidationError(errors)
 		
@@ -1754,8 +1788,11 @@ def save_object_data(species_wid, obj, obj_data, obj_list, user, save=False, sav
 	if save:
 		if isinstance(obj, SpeciesComponent):
 			obj.species = Species.objects.get(wid=species_wid)
-		obj.full_clean()
-		obj.save()
+		try:
+			obj.full_clean()
+			obj.save()
+		except ValidationError as error:
+			raise ValidationError({'validation': "Validation failed for '%s' for '%s' with save=%d save_m2m=%d" % (obj_data, error, save, save_m2m)})
 	
 	#many-to-many fields
 	for field in fields:
@@ -1780,9 +1817,12 @@ def save_object_data(species_wid, obj, obj_data, obj_list, user, save=False, sav
 	
 	#save
 	if save:
-		obj.full_clean()
-		obj.save()
-		
+		try:
+			obj.full_clean()
+			obj.save()
+		except ValidationError as error:
+			raise ValidationError({'validation': "Validation failed for '%s' for '%s' with save=%d save_m2m=%d" % (obj_data, error, save, save_m2m)})
+			
 	#return obj
 	return obj
 	

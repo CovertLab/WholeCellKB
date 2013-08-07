@@ -137,18 +137,18 @@ def index(request, species_wid=None):
 		mons = models.ProteinMonomer.objects.filter(species__id = species.id)
 		cpxs = models.ProteinComplex.objects.filter(species__id = species.id)
 		monDNABind = mons.filter(dna_footprint__length__gt=0).count()
-		monIntMem = mons.filter(localization__wid = 'm').exclude(signal_sequence__type = 'lipoprotein').count() + mons.filter(localization__wid = 'tm').exclude(signal_sequence__type = 'lipoprotein').count()
-		monLipo = mons.filter(signal_sequence__type = 'lipoprotein').count()
-		monSecreted = mons.filter(signal_sequence__type = 'secretory').count()
-		monTermOrg = mons.filter(localization__wid = 'tc').count() + mons.filter(localization__wid = 'tm').count()
+		monIntMem = mons.filter(localization__compartment__wid = 'm').exclude(localization__signal_sequence_type = 'lipoprotein').count() + mons.filter(localization__compartment__wid = 'tm').exclude(localization__signal_sequence_type = 'lipoprotein').count()
+		monLipo = mons.filter(localization__signal_sequence_type = 'lipoprotein').count()
+		monSecreted = mons.filter(localization__signal_sequence_type = 'secretory').count()
+		monTermOrg = mons.filter(localization__compartment__wid = 'tc').count() + mons.filter(localization__compartment__wid = 'tm').count()
 		cpxDNABind = cpxs.filter(dna_footprint__length__gt=0).count()
 		content.append([
 			[0, 'Proteins', mons.count() + cpxs.count()],
 				[1, 'Monomers', mons.count(), None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'ProteinMonomer'})],			
 					[2, 'DNA-binding', monDNABind],
 					[2, 'Integral membrane', monIntMem],
-					[2, 'Lipoprotein', monLipo, None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'ProteinMonomer'}) + '?signal_sequence__type=lipoprotein'],			
-					[2, 'Secreted', monSecreted, None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'ProteinMonomer'}) + '?signal_sequence__type=secretory'],
+					[2, 'Lipoprotein', monLipo, None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'ProteinMonomer'}) + '?localization__signal_sequence_type=lipoprotein'],			
+					[2, 'Secreted', monSecreted, None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'ProteinMonomer'}) + '?localization__signal_sequence_type=secretory'],
 					[2, 'Terminal organelle', monTermOrg],					
 				[1, 'Complexes', cpxs.count(), None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'ProteinComplex'})],
 					[2, 'DNA-binding', cpxDNABind],
@@ -202,8 +202,8 @@ def index(request, species_wid=None):
 		])
 		
 		
-		nCellComp = models.Metabolite.objects.filter(species__id = species.id, biomass_composition__concentration__isnull=False).count()
-		nMediaComp = models.Metabolite.objects.filter(species__id = species.id, media_composition__concentration__isnull=False).count()		
+		nCellComp = models.Metabolite.objects.filter(species__id = species.id, intracellular_concentrations__isnull=False).count()
+		nMediaComp = models.Metabolite.objects.filter(species__id = species.id, media_concentration__isnull=False).count()		
 		nKineticsKeq = models.Reaction.objects.filter(species__id = species.id, keq__isnull=False).count()
 		nKineticsKm = \
 			models.Reaction.objects.filter(species__id = species.id, kinetics_forward__km__isnull=False).count() + \
@@ -211,8 +211,8 @@ def index(request, species_wid=None):
 		nKineticsVmax = \
 			models.Reaction.objects.filter(species__id = species.id, kinetics_forward__vmax__isnull=False).count() + \
 			models.Reaction.objects.filter(species__id = species.id, kinetics_backward__vmax__isnull=False).count()
-		nRnaExp = models.Gene.objects.filter(species__id = species.id, expression__isnull=False).count()
-		nRnaHl = models.Gene.objects.filter(species__id = species.id, half_life__isnull=False).count()
+		nRnaExp = models.TranscriptionUnit.objects.filter(species__id = species.id, transcription_rate__isnull=False).count()
+		nRnaHl = models.Rna.objects.filter(species__id = species.id, half_life__isnull=False).count()
 		nStimuli = models.Stimulus.objects.filter(species__id = species.id, value__isnull=False).count()
 		nTrAffinity = models.TranscriptionalRegulation.objects.filter(species__id = species.id, affinity__isnull=False).count()		
 		nTrActivity = models.TranscriptionalRegulation.objects.filter(species__id = species.id, activity__isnull=False).count()		
