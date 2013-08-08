@@ -14,5 +14,8 @@ xapian_index/*.DB
 xapian_index/flintlock
 xapian_index/iamchert
 
+#data
+static/public/data/*
+
 #log
 log/*
