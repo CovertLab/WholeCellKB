@@ -29,7 +29,7 @@ from public import models
 from public.forms import ExportDataForm, ImportDataForm
 from public.helpers import getEntry, format_field_detail_view, objectToQuerySet, render_queryset_to_response, getObjectTypes, getModel, get_invalid_objects, get_edit_form_fields, get_edit_form_data
 from public.helpers import validate_object_fields, validate_model_objects, validate_model_unique, save_object_data, batch_import_from_excel, readFasta, writeExcel
-from public.models import Entry, Parameter, Reference, Species, SpeciesComponent, ModelProperty, SimulationProperty
+from public.models import Entry, Parameter, Reference, Species, SpeciesComponent, ModelProperty, SimulationProperty, Type
 from public.helpers import PropertyDefinitionFilter, PygmentsStyle, PygmentsFormatter
 import pygments
 from pygments.lexers import MatlabLexer
@@ -202,8 +202,8 @@ def index(request, species_wid=None):
 		])
 		
 		
-		nCellComp = models.Metabolite.objects.filter(species__id = species.id, intracellular_concentrations__isnull=False).count()
-		nMediaComp = models.Metabolite.objects.filter(species__id = species.id, media_concentration__isnull=False).count()		
+		nCellConc = models.Metabolite.objects.filter(species__id = species.id, intracellular_concentrations__isnull=False).count()
+		nMediaConc = models.Metabolite.objects.filter(species__id = species.id, media_concentration__isnull=False).count()		
 		nKineticsKeq = models.Reaction.objects.filter(species__id = species.id, keq__isnull=False).count()
 		nKineticsKm = \
 			models.Reaction.objects.filter(species__id = species.id, kinetics_forward__km__isnull=False).count() + \
@@ -211,27 +211,31 @@ def index(request, species_wid=None):
 		nKineticsVmax = \
 			models.Reaction.objects.filter(species__id = species.id, kinetics_forward__vmax__isnull=False).count() + \
 			models.Reaction.objects.filter(species__id = species.id, kinetics_backward__vmax__isnull=False).count()
-		nRnaExp = models.TranscriptionUnit.objects.filter(species__id = species.id, transcription_rate__isnull=False).count()
+		nTranscriptionRates = models.TranscriptionUnit.objects.filter(species__id = species.id, transcription_rate__isnull=False).count()
+		nTranslationRates = models.ProteinMonomer.objects.filter(species__id = species.id, translation_rate__isnull=False).count()
 		nRnaHl = models.Rna.objects.filter(species__id = species.id, half_life__isnull=False).count()
-		nStimuli = models.Stimulus.objects.filter(species__id = species.id, value__isnull=False).count()
-		nTrAffinity = models.TranscriptionalRegulation.objects.filter(species__id = species.id, affinity__isnull=False).count()		
-		nTrActivity = models.TranscriptionalRegulation.objects.filter(species__id = species.id, activity__isnull=False).count()		
+		nProtHl = models.ProteinMonomer.objects.filter(species__id = species.id, half_life__isnull=False).count()
+		nStimuli = models.Stimulus.objects.filter(species__id = species.id, value__isnull=False).count()		
+		nTrActivity = models.TranscriptionalRegulation.objects.filter(species__id = species.id, activity__isnull=False).count()
+		nTrAffinity = models.TranscriptionalRegulation.objects.filter(species__id = species.id, affinity__isnull=False).count()
 		nOther = models.Parameter.objects.filter(species__id = species.id).count()
-		nTotParameters = nCellComp + nMediaComp + nKineticsVmax + nRnaExp + nRnaHl + nStimuli + nTrAffinity + nTrActivity + nOther
+		nTotParameters = nCellConc + nMediaConc + nKineticsVmax + nTranscriptionRates + nTranslationRates + nRnaHl + nProtHl + nStimuli + nTrAffinity + nTrActivity + nOther
 
 		content.append([
-			[0, 'Quantitative parameters', nTotParameters],
-			[1, 'Cell composition', nCellComp],
-			[1, 'Media composition', nMediaComp],			
-			[1, 'Reaction K<sub>eq</sub>', nKineticsKeq],
-			[1, 'Reaction K<sub>m</sub>', nKineticsKm],
-			[1, 'Reaction V<sub>max</sub>', nKineticsVmax],
-			[1, 'RNA expression', nRnaExp],
-			[1, 'RNA half-lives', nRnaHl],
-			[1, 'Stimulus values', nStimuli],			
-			[1, 'Transcr. reg. activity', nTrAffinity],
-			[1, 'Transcr. reg. affinity', nTrActivity],
-			[1, 'Other', nOther, None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'Parameter'})],			
+			[0, 'Quantitative parameters', nTotParameters, None, reverse('public.views.list_parameters', kwargs={'species_wid': species.wid})],
+			[1, 'Intracellular concentrations', nCellConc, None, reverse('public.views.list_parameters', kwargs={'species_wid': species.wid, 'type': 'intracellular_concentration'})],
+			[1, 'Media concentrations', nMediaConc, None, reverse('public.views.list_parameters', kwargs={'species_wid': species.wid, 'type': 'media_concentration'})],
+			[1, 'Protein half-lives', nProtHl, None, reverse('public.views.list_parameters', kwargs={'species_wid': species.wid, 'type': 'prot_half_life'})],			
+			[1, 'Reaction K<sub>eq</sub>', nKineticsKeq, None, reverse('public.views.list_parameters', kwargs={'species_wid': species.wid, 'type': 'reaction_keq'})],
+			[1, 'Reaction K<sub>m</sub>', nKineticsKm, None, reverse('public.views.list_parameters', kwargs={'species_wid': species.wid, 'type': 'reaction_km'})],
+			[1, 'Reaction V<sub>max</sub>', nKineticsVmax, None, reverse('public.views.list_parameters', kwargs={'species_wid': species.wid, 'type': 'reaction_vmax'})],			
+			[1, 'RNA half-lives', nRnaHl, None, reverse('public.views.list_parameters', kwargs={'species_wid': species.wid, 'type': 'rna_half_life'})],
+			[1, 'Stimulus values', nStimuli, None, reverse('public.views.list_parameters', kwargs={'species_wid': species.wid, 'type': 'stimulus_value'})],
+			[1, 'Transcription rates', nTranscriptionRates, None, reverse('public.views.list_parameters', kwargs={'species_wid': species.wid, 'type': 'transcription_rates'})],			
+			[1, 'Transcr. reg. activity', nTrActivity, None, reverse('public.views.list_parameters', kwargs={'species_wid': species.wid, 'type': 'treg_activity'})],
+			[1, 'Transcr. reg. affinity', nTrAffinity, None, reverse('public.views.list_parameters', kwargs={'species_wid': species.wid, 'type': 'treg_affinity'})],
+			[1, 'Translation rates', nTranslationRates, None, reverse('public.views.list_parameters', kwargs={'species_wid': species.wid, 'type': 'translation_rates'})],
+			[1, 'Other', nOther, None, reverse('public.views.list_parameters', kwargs={'species_wid': species.wid, 'type': 'other'})],
 		])
 		
 		content.append([
@@ -452,19 +456,44 @@ def list(request, species_wid, model_type):
 			continue
 		
 		if isinstance(field, (ForeignKey, ManyToManyField)):
-			tmp = model.objects.filter(species__id=species.id).order_by(field_full_name + '__name').values(field_full_name).annotate(count=Count(field_full_name))
+			facet_data = model.objects.filter(species__id=species.id).order_by(field_full_name + '__name').values(field_full_name, field_full_name + '__wid', field_full_name + '__name').annotate(count = Count(field_full_name))
 		else:
-			tmp = model.objects.filter(species__id=species.id).order_by(field_full_name).values(field_full_name).annotate(count=Count(field_full_name))
+			facet_data = model.objects.filter(species__id=species.id).order_by(field_full_name).values(field_full_name).annotate(count=Count(field_full_name))
+		
+		if isinstance(field, (ForeignKey, ManyToManyField)) and issubclass(field.rel.to, Type):
+			facet_data_hash = {}			
+			for facet in facet_data:
+				facet_data_hash[facet[field_full_name]] = {
+					field_full_name: facet[field_full_name],
+					field_full_name + '__wid': facet[field_full_name + '__wid'],
+					field_full_name + '__name': facet[field_full_name + '__name'],
+					'count': None,
+					}
+			
+				'''
+				for parent in Type.objects.get(id=facet[field_full_name]).get_all_parents():
+					facet_data_hash[parent.id] = {
+						field_full_name: parent.id,
+						field_full_name + '__wid': parent.wid,
+						field_full_name + '__name': parent.name,
+						'count': None,
+						}
+				'''
+			facet_data = [val for x, val in facet_data_hash.iteritems()]			
+			facet_data.sort(lambda x, y:cmp(x[field_full_name + '__name'], y[field_full_name + '__name']))
+			
+			#for idx in range(len(facet_data)):
+			#	facet_data[idx]['count'] = Type.objects.get(id=facet_data[idx][field_full_name]).get_all_members().filter(model_type=model_type).count()
+			
 		facets = []
-		for facet in tmp:
+		for facet in facet_data:
 			value = facet[field_full_name]			
 			if value is None or unicode(value) == '':
 				continue
 			
 			if isinstance(field, (ForeignKey, ManyToManyField)):
-				tmp2 = tmp_model.objects.values('wid', 'name').get(id=value)
-				id = tmp2['wid']
-				name = capfirst(tmp2['name'])
+				id = facet[field_full_name + '__wid']
+				name = capfirst(facet[field_full_name + '__name'])
 			elif (field.choices is not None) and (len(field.choices) > 0) and (not isinstance(field, (BooleanField, NullBooleanField))):	
 				id = value
 				choices = [x[0] for x in field.choices]
@@ -497,8 +526,11 @@ def list(request, species_wid, model_type):
 			elif isinstance(field, (AutoField, BigIntegerField, DecimalField, FloatField, IntegerField, PositiveIntegerField, PositiveSmallIntegerField, SmallIntegerField)):
 				kwargs = {field_full_name: float(val)}
 			else:
-				kwargs = {field_full_name: val}
+				kwargs = {field_full_name: val}				
 			objects = objects.filter(**kwargs)
+			
+			if isinstance(field, (ForeignKey, ManyToManyField)) and issubclass(field.rel.to, Type):
+				objects = Type.objects.get(wid=val).get_all_members().filter(model_type=model_type).order_by('wid')
 
 	return render_queryset_to_response(
 		species_wid = species_wid,
@@ -511,6 +543,234 @@ def list(request, species_wid, model_type):
 			'model_verbose_name': model._meta.verbose_name,
 			'model_verbose_name_plural': model._meta.verbose_name_plural,
 			'facet_fields': facet_fields,
+			})
+	
+def list_parameters(request, species_wid, type = None):
+	species = Species.objects.get(wid=species_wid)
+	
+	cellConc = models.Metabolite.objects.filter(species__id = species.id, intracellular_concentrations__isnull=False)
+	mediaConc = models.Metabolite.objects.filter(species__id = species.id, media_concentration__isnull=False)
+	kineticsKeq = models.Reaction.objects.filter(species__id = species.id, keq__isnull=False)
+	kineticsKmFor = models.Reaction.objects.filter(species__id = species.id, kinetics_forward__km__isnull=False)
+	kineticsKmRev = models.Reaction.objects.filter(species__id = species.id, kinetics_backward__km__isnull=False)
+	kineticsVmaxFor = models.Reaction.objects.filter(species__id = species.id, kinetics_forward__vmax__isnull=False)
+	kineticsVmaxRev = models.Reaction.objects.filter(species__id = species.id, kinetics_backward__vmax__isnull=False)
+	transcriptionRates = models.TranscriptionUnit.objects.filter(species__id = species.id, transcription_rate__isnull=False)
+	translationRates = models.ProteinMonomer.objects.filter(species__id = species.id, translation_rate__isnull=False)
+	rnaHl = models.Rna.objects.filter(species__id = species.id, half_life__isnull=False)
+	protHl = models.ProteinMonomer.objects.filter(species__id = species.id, half_life__isnull=False)
+	stimuli = models.Stimulus.objects.filter(species__id = species.id, value__isnull=False)	
+	trActivity = models.TranscriptionalRegulation.objects.filter(species__id = species.id, activity__isnull=False)
+	trAffinity = models.TranscriptionalRegulation.objects.filter(species__id = species.id, affinity__isnull=False)
+	other = models.Parameter.objects.filter(species__id = species.id)
+	
+	facets = [		
+		{'name': 'Intracellular concentrations', 'count': cellConc.count(), 'id': 'intracellular_concentration'},
+		{'name': 'Media concentrations', 'count': mediaConc.count(), 'id': 'media_concentration'},
+		{'name': 'Protein half-lives', 'count': protHl.count(), 'id': 'prot_half_life'},			
+		{'name': 'Reaction K<sub>eq</sub>', 'count': kineticsKeq.count(), 'id': 'reaction_keq'},
+		{'name': 'Reaction K<sub>m</sub>', 'count': kineticsKmFor.count() + kineticsKmRev.count(), 'id': 'reaction_km'},
+		{'name': 'Reaction V<sub>max</sub>', 'count': kineticsVmaxFor.count() + kineticsVmaxRev.count(), 'id': 'reaction_vmax'},
+		{'name': 'RNA half-lives', 'count': rnaHl.count(), 'id': 'rna_half_life'},
+		{'name': 'Stimulus values', 'count': stimuli.count(), 'id': 'stimulus_value'},
+		{'name': 'Transcription rates', 'count': transcriptionRates.count(), 'id': 'transcription_rates'},
+		{'name': 'Transcr. regulation activity', 'count': trActivity.count(), 'id': 'treg_activity'},
+		{'name': 'Transcr. regulation affinity', 'count': trAffinity.count(), 'id': 'treg_affinity'},
+		{'name': 'Translation rates', 'count': translationRates.count(), 'id': 'translation_rates'},
+		{'name': 'Other', 'count': other.count(), 'id': 'other'},
+	]
+		
+	qs_models = []
+	qs = EmptyQuerySet()
+	params = []	
+
+	if type is None or type == 'intracellular_concentration':
+		qs_models.append(models.Metabolite)
+		qs = chain(qs, cellConc)
+		for met in cellConc:
+			for conc in met.intracellular_concentrations.all():
+				constrained = conc.evidence.all().filter(is_experimentally_constrained=True).count() > 0
+				refs = EmptyQuerySet()
+				for evidence in conc.evidence.all():
+					refs = refs | evidence.references.all()
+				refs = refs.count()
+				params.append({'type': 'intracellular concentration', 'obj': met, 'value': '%.4f' % conc.concentration, 'units': 'mM', 'constrained': constrained, 'n_references': refs})
+
+	if type is None or type == 'media_concentration': 
+		qs_models.append(models.Metabolite)
+		qs = chain(qs, mediaConc)
+		for met in mediaConc:
+			conc = met.media_concentration
+			constrained = conc.evidence.all().filter(is_experimentally_constrained=True).count() > 0
+			refs = EmptyQuerySet()
+			for evidence in conc.evidence.all():
+				refs = refs | evidence.references.all()
+			refs = refs.count()
+			params.append({'type': 'media concentration', 'obj': met, 'value': '%.4f' % conc.concentration, 'units': 'mM', 'constrained': constrained, 'n_references': refs})
+		
+	if type is None or type == 'prot_half_life': 
+		qs_models.append(models.ProteinMonomer)
+		qs = chain(qs, protHl)
+		for mon in protHl:
+			hl = mon.half_life
+			constrained = hl.evidence.all().filter(is_experimentally_constrained=True).count() > 0
+			refs = EmptyQuerySet()
+			for evidence in hl.evidence.all():
+				refs = refs | evidence.references.all()
+			refs = refs.count()
+			params.append({'type': 'half-life', 'obj': mon, 'value': '%.2f' % hl.value, 'units': hl.units, 'constrained': constrained, 'n_references': refs})
+			
+	if type is None or type == 'reaction_keq':
+		qs_models.append(models.Reaction)
+		qs = chain(qs, kineticsKeq)
+		for rxn in kineticsKeq:
+			keq = rxn.keq
+			constrained = keq.evidence.all().filter(is_experimentally_constrained=True).count() > 0
+			refs = EmptyQuerySet()
+			for evidence in keq.evidence.all():
+				refs = refs | evidence.references.all()
+			refs = refs.count()
+			params.append({'type': 'forward K<sub>m</sub>', 'obj': rxn, 'value': '%s' % keq.value, 'units': keq.units, 'constrained': constrained, 'n_references': refs})
+			
+	if type is None or type == 'reaction_km':
+		qs_models.append(models.Reaction)
+		qs = chain(qs, kineticsKmFor, kineticsKmRev)
+		for rxn in kineticsVmaxFor:
+			kinetics = rxn.kinetics_forward
+			constrained = kinetics.evidence.all().filter(is_experimentally_constrained=True).count() > 0
+			refs = EmptyQuerySet()
+			for evidence in kinetics.evidence.all():
+				refs = refs | evidence.references.all()
+			refs = refs.count()
+			params.append({'type': 'forward K<sub>m</sub>', 'obj': rxn, 'value': '%s' % kinetics.km, 'units': '&mu;M', 'constrained': constrained, 'n_references': refs})
+			
+		for rxn in kineticsVmaxRev:
+			kinetics = rxn.kinetics_backward
+			constrained = kinetics.evidence.all().filter(is_experimentally_constrained=True).count() > 0
+			refs = EmptyQuerySet()
+			for evidence in kinetics.evidence.all():
+				refs = refs | evidence.references.all()
+			refs = refs.count()
+			params.append({'type': 'reverse K<sub>m</sub>', 'obj': rxn, 'value': '%s' % kinetics.km, 'units': '&mu;M', 'constrained': constrained, 'n_references': refs})
+		
+	if type is None or type == 'reaction_vmax':
+		qs_models.append(models.Reaction)
+		qs = chain(qs, kineticsVmaxFor, kineticsVmaxRev)
+		for rxn in kineticsVmaxFor:
+			kinetics = rxn.kinetics_forward
+			constrained = kinetics.evidence.all().filter(is_experimentally_constrained=True).count() > 0
+			refs = EmptyQuerySet()
+			for evidence in kinetics.evidence.all():
+				refs = refs | evidence.references.all()
+			refs = refs.count()
+			params.append({'type': 'forward v<sub>max</sub>', 'obj': rxn, 'value': '%.2f' % kinetics.vmax, 'units': kinetics.vmax_unit, 'constrained': constrained, 'n_references': refs})
+		for rxn in kineticsVmaxRev:
+			kinetics = rxn.kinetics_backward
+			constrained = kinetics.evidence.all().filter(is_experimentally_constrained=True).count() > 0
+			refs = EmptyQuerySet()
+			for evidence in kinetics.evidence.all():
+				refs = refs | evidence.references.all()
+			refs = refs.count()
+			params.append({'type': 'reverse v<sub>max</sub>', 'obj': rxn, 'value': '%.2f' % kinetics.vmax, 'units': kinetics.vmax_unit, 'constrained': constrained, 'n_references': refs})
+		
+	if type is None or type == 'rna_half_life':
+		qs_models.append(models.Rna)
+		qs = chain(qs, rnaHl)
+		for rna in rnaHl:
+			hl = rna.half_life
+			constrained = hl.evidence.all().filter(is_experimentally_constrained=True).count() > 0
+			refs = EmptyQuerySet()
+			for evidence in hl.evidence.all():
+				refs = refs | evidence.references.all()
+			refs = refs.count()
+			params.append({'type': 'half-life', 'obj': rna, 'value': '%.2f' % hl.value, 'units': hl.units, 'constrained': constrained, 'n_references': refs})
+			
+	if type is None or type == 'stimulus_value':
+		qs_models.append(models.Stimulus)
+		qs = chain(qs, stimuli)
+		for stimulus in stimuli:
+			s = stimulus.value
+			constrained = s.evidence.all().filter(is_experimentally_constrained=True).count() > 0
+			refs = EmptyQuerySet()
+			for evidence in s.evidence.all():
+				refs = refs | evidence.references.all()
+			refs = refs.count()
+			params.append({'type': 'value', 'obj': stimulus, 'value': '%.2f' % s.value, 'units': s.units, 'constrained': constrained, 'n_references': refs})
+			
+	if type is None or type == 'transcription_rates':
+		qs_models.append(models.TranscriptionUnit)
+		qs = chain(qs, transcriptionRates)
+		for rna in transcriptionRates:
+			tr = rna.translation_rate
+			constrained = tr.evidence.all().filter(is_experimentally_constrained=True).count() > 0
+			refs = EmptyQuerySet()
+			for evidence in tr.evidence.all():
+				refs = refs | evidence.references.all()
+			refs = refs.count()
+			params.append({'type': 'transcription rate', 'obj': rna, 'value': '%.2f' % tr.value, 'units': tr.units, 'constrained': constrained, 'n_references': refs})
+			
+	if type is None or type == 'treg_activity':
+		qs_models.append(models.TranscriptionalRegulation)
+		qs = chain(qs, trActivity)
+		for tr in trActivity:
+			activity = tr.activity
+			constrained = activity.evidence.all().filter(is_experimentally_constrained=True).count() > 0
+			refs = EmptyQuerySet()
+			for evidence in activity.evidence.all():
+				refs = refs | evidence.references.all()
+			refs = refs.count()
+			params.append({'type': 'fold change activity', 'obj': tr, 'value': '%.2f' % activity.value, 'units': activity.units, 'constrained': constrained, 'n_references': refs})
+			
+	if type is None or type == 'treg_affinity':
+		qs_models.append(models.TranscriptionalRegulation)
+		qs = chain(qs, trAffinity)
+		for tr in trAffinity:
+			affinity = tr.affinity
+			constrained = affinity.evidence.all().filter(is_experimentally_constrained=True).count() > 0
+			refs = EmptyQuerySet()
+			for evidence in affinity.evidence.all():
+				refs = refs | evidence.references.all()
+			refs = refs.count()
+			params.append({'type': 'affinity', 'obj': tr, 'value': '%.2f' % affinity.value, 'units': affinity.units, 'constrained': constrained, 'n_references': refs})			
+	
+	if type is None or type == 'translation_rates':
+		qs_models.append(models.ProteinMonomer)
+		qs = chain(qs, translationRates)
+		for mon in translationRates:
+			tr = mon.translation_rate
+			constrained = tr.evidence.all().filter(is_experimentally_constrained=True).count() > 0
+			refs = EmptyQuerySet()
+			for evidence in tr.evidence.all():
+				refs = refs | evidence.references.all()
+			refs = refs.count()
+			params.append({'type': 'translation rate', 'obj': mon, 'value': '%.2f' % tr.value, 'units': tr.units, 'constrained': constrained, 'n_references': refs})
+		
+	if type is None or type == 'other':
+		qs_models.append(models.Parameter)
+		qs = chain(qs, other)
+		for param in other:
+			val = param.value
+			constrained = val.evidence.all().filter(is_experimentally_constrained=True).count() > 0
+			refs = EmptyQuerySet()
+			for evidence in val.evidence.all():
+				refs = refs | evidence.references.all()
+			refs = refs.count()
+			params.append({'type': 'value', 'obj': param, 'value': '%s' % val.value, 'units': val.units, 'constrained': constrained, 'n_references': refs})
+		
+	qs_models = set(qs_models)
+	
+	params.sort(lambda x, y:cmp(x['type']+x['obj'].wid, y['type']+y['obj'].wid))
+	
+	return render_queryset_to_response(
+		species_wid = species_wid,
+		request = request, 
+		models = qs_models, 
+		queryset = qs, 
+		templateFile = 'public/list_parameters.html', 
+		data = {
+			'params': params,
+			'type': type,
+			'facets': facets,
 			})
 	
 def detail(request, species_wid, wid):

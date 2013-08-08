@@ -1,0 +1,91 @@
+{% extends "public/base.html" %}
+
+{% comment %}
+List template
+
+Author: Jonathan Karr, jkarr@stanford.edu
+Affiliation: Covert Lab, Department of Bioengineering, Stanford University
+Last updated: 2012-07-17
+{% endcomment %}
+
+{% load static %}
+{% load templatetags %}
+
+{% block head_title %}{{ block.super }} :: {{ model_verbose_name_plural }}{% endblock %}
+{% block page_title %}{{ model_verbose_name_plural }}{% endblock %}
+
+{% block head %}
+{{ block.super }}
+<meta name="entry_type" content="{{ model_verbose_name }}" />
+{% endblock %}
+
+{% block action_icons %}
+<a href="?{% makeurl queryargs 'format' 'xlsx' %}"><img src="{% get_static_prefix %}public/img/excel.gif" title="Download in Excel format" alt="Download in Excel format" /></a>
+<a href="?{% makeurl queryargs 'format' 'json' %}"><img src="{% get_static_prefix %}public/img/json.png" title="Download in JSON format" alt="Download in JSON format" /></a>
+<a href="?{% makeurl queryargs 'format' 'xml' %}"><img src="{% get_static_prefix %}public/img/xml.gif" title="Download in XML format" alt="Download in XML format" /></a>
+{{ block.super }}
+{% endblock %}
+
+{% block extrastyles %}
+#listfilter .nofilters{
+	font-style:italic;
+	text-align:center;
+}
+{% if facet_fields|length == 0 %}
+#list{
+	width:100%;
+}
+#listfilter{
+	display:none;
+}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<table id="list" class="parameters">
+<thead>
+	<tr>		
+		<th>Type</th>
+		<th>Object</th>
+		<th>Value</th>
+		<th>Units</th>
+		<th>Constrained?</th>
+		<th>No. references</th>
+	</tr>
+</thead>
+<tbody>
+	{% autoescape off %}
+	{% for param in params %}
+	<tr>
+		<td>{{ param.type }}</td>
+		<td><a href="{{ object.get_absolute_url }}">{{ param.obj.wid }}: {{ param.obj.name }}</a></td>		
+		<td>{{ param.value }}</td>
+		<td>{{ param.units }}</td>
+		<td>{{ param.constrained|yesno:"Y," }}</td>
+		<td>{% if param.n_references > 0 %}{{ param.n_references }}{% endif %}</td>
+	</tr>
+	{% endfor %}
+	{% endautoescape %}
+</tbody>
+</table>
+
+<div id="listfilter">
+<h1>Filter</h1>
+	<div class="block">
+	<h2>Type</h2>
+	<ul>
+		<li{% if not type %} class="selected"{% endif %}><a href="{% url public.views.list_parameters species_wid=species.wid %}">All</a></li>
+		{% for facet in facets %}
+		<li
+			{% if facet.id in type %}
+			class="selected"
+			{% endif %}
+			>
+			<a href="{% url public.views.list_parameters species_wid=species.wid type=facet.id %}">{% autoescape off %}{{ facet.name }}{% endautoescape %} ({{ facet.count }})</a></li>
+		{% endfor %}
+	</ul>
+	</div>
+</div>
+
+<div style="clear:both;"></div>
+{% endblock %}

@@ -473,6 +473,35 @@ select.select{
 	font-size:12px;
 }
 
+/* parameter list */
+#list.parameters thead tr th:first-child, #list.parameters tbody tr td:first-child{
+	max-width:125px;
+	white-space:nowrap;
+	overflow-x:hidden;
+}
+#list.parameters thead tr th:nth-child(2), #list.parameters tbody tr td:nth-child(2){
+	max-width:125px;
+	white-space:nowrap;
+	overflow-x:hidden;
+}
+#list.parameters tbody tr td:nth-child(3){
+	max-width:50px;
+	text-align:right;
+}
+#list.parameters tbody tr td:nth-child(4){
+	max-width:50px;
+}
+#list.parameters thead tr th:nth-child(4), #list.parameters tbody tr td:nth-child(4){
+	white-space:nowrap;
+	overflow-x:hidden;
+}
+#list.parameters tbody tr td:nth-child(5){
+	text-align:center;
+}
+#list.parameters tbody tr td:nth-child(6){
+	text-align:right;
+}
+
 /* details content */
 #detail{
 	width:100%;
