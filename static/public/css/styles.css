@@ -559,6 +559,8 @@ select.select{
 	padding:0px;
 	padding-left:20px;
 }
+#detail tbody tr td ul li, #detail tbody tr td ol li{
+}
 #detail tbody tr td ul li p, #detail tbody tr td ol li p{
 	margin:0px;
 	padding:0px;
@@ -581,6 +583,40 @@ select.select{
 #detail tbody tr td:last-child img{
 	position:relative;
 	top:1px;
+}
+
+#detail tbody.data tr td table{
+	width:100%;
+	padding:10px 20px 10px 20px;
+}
+#detail tbody.data tr td table thead tr:first-child th, #detail tbody.data tr td table thead tr:first-child td{
+	background:transparent;
+	color:black;
+	border:none;
+	border-top:solid black 1px;
+	border-bottom:solid black 1px;
+}
+#detail tbody.data tr:nth-child(even) td table tbody tr:nth-child(even) td, 
+#detail tbody.data tr:nth-child(even) td table tbody tr:nth-child(odd) td, 
+#detail tbody.data tr:nth-child(odd) td table tbody tr:nth-child(odd) td, 
+#detail tbody.data tr:nth-child(odd) td table tbody tr:nth-child(even) td{
+	background:transparent;
+	width:auto;
+	border-right:0px;
+	border-left:0px;
+}
+#detail tbody.data tr td table tbody tr:last-child td{
+	border-bottom:solid black 1px;
+}
+#detail tbody.data tr td table tr:last-child th:first-child, #detail tbody.data tr td table tr:last-child td:first-child{
+	border-bottom-left-radius:0px;
+}
+#detail tbody.data tr td table tr:last-child th:last-child, #detail tbody.data tr td table tr:last-child td:last-child{
+	border-bottom-right-radius:0px;
+}
+#detail tbody.data tr td table tr:first-child th{
+	border-top-left-radius:0px;
+	border-top-right-radius:0px;
 }
 
 /* viewPropertyInSimulation */
