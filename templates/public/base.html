@@ -92,8 +92,10 @@ Last updated: 2012-07-17
 					<td><a href="javascript:document.search.submit()"><img src="{% get_static_prefix %}public/img/magnifier.png" /></a></td>
 				</tr>
 					<td class="engine">
-						<input type="radio" name="engine" value="haystack" {% if not engine or engine == 'haystack' %} checked="true" {% endif %}/><span>WholeCellKB</span>
+						<input type="radio" name="engine" value="haystack" {% if not engine or engine == 'haystack' or not GOOGLE_SEARCH_ENABLED %} checked="true" {% endif %}/><span>WholeCellKB</span>
+						{% if GOOGLE_SEARCH_ENABLED %}
 						<input type="radio" name="engine" value="google" {% if engine == 'google' %} checked="true" {% endif %}/><span>Google</span>
+						{% endif %}
 					</td>
 					<td></td>
 				</table>

@@ -11,6 +11,7 @@ import os
 ROOT_URL = 'http://covertlab.stanford.edu/projects/WholeCell-Mpn/kb'
 ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
 MODEL_CODE_BASE_DIR = '/home/projects/WholeCell-Mpn/sim'
+GOOGLE_SEARCH_ENABLED = False
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG

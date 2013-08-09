@@ -209,7 +209,7 @@ select.select{
 #header .search table tr td{
 	padding:0px;
 	margin:0px;
-	text-align:center;	
+	text-align:left;	
 }
 #header .search img{
 	position:relative;

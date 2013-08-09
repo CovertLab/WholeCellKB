@@ -423,6 +423,7 @@ def render_queryset_to_response(request = [], queryset = EmptyQuerySet(), models
 		data['modelmetadatas'] = getModelsMetadata(SpeciesComponent, request.user.is_anonymous())
 		data['modelnames'] = getObjectTypes(SpeciesComponent, request.user.is_anonymous())
 		data['last_updated_date'] = datetime.datetime.fromtimestamp(os.path.getmtime(settings.TEMPLATE_DIRS[0] + '/' + templateFile))
+		data['GOOGLE_SEARCH_ENABLED'] = settings.GOOGLE_SEARCH_ENABLED
 		
 		return render_to_response(templateFile, data, context_instance = RequestContext(request))
 	elif format == 'bib':
@@ -455,6 +456,7 @@ def render_queryset_to_response(request = [], queryset = EmptyQuerySet(), models
 		data['species_list'] = Species.objects.all()
 		data['modelmetadatas'] = getModelsMetadata(SpeciesComponent, request.user.is_anonymous())
 		data['modelnames'] = getObjectTypes(SpeciesComponent, request.user.is_anonymous())
+		data['GOOGLE_SEARCH_ENABLED'] = settings.GOOGLE_SEARCH_ENABLED
 
 		for fileName in ['styles', 'styles.print', 'styles.pdf']:
 			f = open(settings.STATICFILES_DIRS[0] + '/public/css/' + fileName + '.css', 'r')

@@ -24,6 +24,7 @@ from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from haystack.query import SearchQuerySet
+from interruptingcow import timeout
 from itertools import chain
 from public import models
 from public.forms import ExportDataForm, ImportDataForm
@@ -1167,6 +1168,7 @@ def delete(request, species_wid, wid):
 			}
 		)
 
+@timeout(300, exception=RuntimeError)
 def exportData(request, species_wid=None):	
 	getDict = request.GET.copy()
 	if getDict.get('format', ''):
@@ -1181,7 +1183,7 @@ def exportData(request, species_wid=None):
 				'form': form
 				}
 			)
-	else:		
+	else:
 		species = Species.objects.get(wid = form.cleaned_data['species'])
 		queryset = EmptyQuerySet()
 		models = []
