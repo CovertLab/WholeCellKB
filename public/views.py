@@ -463,6 +463,8 @@ def list(request, species_wid, model_type):
 		if isinstance(field, (ForeignKey, ManyToManyField)) and issubclass(field.rel.to, Type):
 			facet_data_hash = {}			
 			for facet in facet_data:
+				if facet[field_full_name] is None:
+					continue
 				facet_data_hash[facet[field_full_name]] = {
 					field_full_name: facet[field_full_name],
 					field_full_name + '__wid': facet[field_full_name + '__wid'],
@@ -470,7 +472,6 @@ def list(request, species_wid, model_type):
 					'count': None,
 					}
 			
-				'''
 				for parent in Type.objects.get(id=facet[field_full_name]).get_all_parents():
 					facet_data_hash[parent.id] = {
 						field_full_name: parent.id,
@@ -478,12 +479,11 @@ def list(request, species_wid, model_type):
 						field_full_name + '__name': parent.name,
 						'count': None,
 						}
-				'''
 			facet_data = [val for x, val in facet_data_hash.iteritems()]			
 			facet_data.sort(lambda x, y:cmp(x[field_full_name + '__name'], y[field_full_name + '__name']))
 			
-			#for idx in range(len(facet_data)):
-			#	facet_data[idx]['count'] = Type.objects.get(id=facet_data[idx][field_full_name]).get_all_members().filter(model_type=model_type).count()
+			for idx in range(len(facet_data)):
+				facet_data[idx]['count'] = Type.objects.get(id=facet_data[idx][field_full_name]).get_all_members().filter(model_type=model_type).count()
 			
 		facets = []
 		for facet in facet_data:
