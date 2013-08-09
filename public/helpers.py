@@ -2134,13 +2134,13 @@ def draw_molecule(smiles, format='svg', width=200, height=200):
 	fid = tempfile.NamedTemporaryFile(suffix = '.svg', delete = False)
 	filename = fid.name
 	fid.close()
-	
+		
 	if format == 'svg':
 		cmd = '/usr/local/bin/molconvert --smiles "%s" -o "%s" svg:w%s,h%s,transbg' % (smiles, filename, width, height)
 		os.system(cmd)
 	else:
 		os.system('java -classpath .:%s:%s DrawMolecule "%s" %s %s %s "png" "%s"' % (
-			'/home/projects/WholeCell/knowledgebase_2/public',
+			settings.ROOT_DIR + '/public',
 			'/usr/share/ChemAxon/MarvinBeans-5.10.4/lib/MarvinBeans.jar', 
 			smiles, 
 			width, height, '213 228 246', filename))

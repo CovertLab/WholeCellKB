@@ -41,8 +41,6 @@ import os
 import settings
 import tempfile
 
-MODEL_CODE_BASE_DIR = '/home/projects/WholeCell/simulation'
-
 def index(request, species_wid=None):
 	if species_wid is not None and species_wid != '':
 		species = Species.objects.get(wid=species_wid)
@@ -899,9 +897,9 @@ def viewPropertyInSimulation(request, species_wid, class_name, property_name):
 		sim_property_names = classes[sim_class_name]
 		sim_property_names.sort()
 		pathParts = sim_class_name.split('.')
-		codePath = "%s/src/+%s/%s.m" % (MODEL_CODE_BASE_DIR, '/+'.join(pathParts[0:-1]), pathParts[-1])
+		codePath = "%s/src/+%s/%s.m" % (settings.MODEL_CODE_BASE_DIR, '/+'.join(pathParts[0:-1]), pathParts[-1])
 		if not os.path.isfile(codePath):
-			codePath = "%s/src/+%s/@%s/%s.m" % (MODEL_CODE_BASE_DIR, '/+'.join(pathParts[0:-1]), pathParts[-1], pathParts[-1])
+			codePath = "%s/src/+%s/@%s/%s.m" % (settings.MODEL_CODE_BASE_DIR, '/+'.join(pathParts[0:-1]), pathParts[-1], pathParts[-1])
 			if not os.path.isfile(codePath):
 				continue
 		
@@ -946,9 +944,9 @@ def viewParameterInSimulation(request, species_wid, wid):
 
 	#highlight code for simulation class
 	pathParts = sim_class_name.split('.')
-	codePath = "%s/src/+%s/%s.m" % (MODEL_CODE_BASE_DIR, '/+'.join(pathParts[0:-1]), pathParts[-1])
+	codePath = "%s/src/+%s/%s.m" % (settings.MODEL_CODE_BASE_DIR, '/+'.join(pathParts[0:-1]), pathParts[-1])
 	if not os.path.isfile(codePath):
-		codePath = "%s/src/+%s/@%s/%s.m" % (MODEL_CODE_BASE_DIR, '/+'.join(pathParts[0:-1]), pathParts[-1], pathParts[-1])
+		codePath = "%s/src/+%s/@%s/%s.m" % (settings.MODEL_CODE_BASE_DIR, '/+'.join(pathParts[0:-1]), pathParts[-1], pathParts[-1])
 	
 	if os.path.isfile(codePath):
 		with open (codePath, "r") as codeFile:
@@ -1020,9 +1018,9 @@ def viewParametersInSimulation(request, species_wid, wid):
 		sim_property_names = classes[sim_class_name]
 		sim_property_names.sort()
 		pathParts = sim_class_name.split('.')
-		codePath = "%s/src/+%s/%s.m" % (MODEL_CODE_BASE_DIR, '/+'.join(pathParts[0:-1]), pathParts[-1])
+		codePath = "%s/src/+%s/%s.m" % (settings.MODEL_CODE_BASE_DIR, '/+'.join(pathParts[0:-1]), pathParts[-1])
 		if not os.path.isfile(codePath):
-			codePath = "%s/src/+%s/@%s/%s.m" % (MODEL_CODE_BASE_DIR, '/+'.join(pathParts[0:-1]), pathParts[-1], pathParts[-1])
+			codePath = "%s/src/+%s/@%s/%s.m" % (settings.MODEL_CODE_BASE_DIR, '/+'.join(pathParts[0:-1]), pathParts[-1], pathParts[-1])
 			if not os.path.isfile(codePath):
 				continue
 		with open (codePath, "r") as codeFile:

@@ -8,8 +8,9 @@ Last updated: 2012-07-17
 
 import os
 
-ROOT_URL = 'http://wholecellkb.stanford.edu'
+ROOT_URL = 'http://covertlab.stanford.edu/projects/WholeCell-Mpn/kb'
 ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
+MODEL_CODE_BASE_DIR = '/home/projects/WholeCell-Mpn/sim'
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -23,7 +24,7 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'wholecellkb',
+        'NAME': 'wholecellkbmpn',
         'USER': 'wholecellkb',
         'PASSWORD': 'wholecellkb',
         'HOST': 'covertlab.stanford.edu',
