@@ -14,7 +14,7 @@ from django.core import validators
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from django.db import models
-from django.db.models import Model, OneToOneField, CharField, IntegerField, URLField, PositiveIntegerField, FloatField, ForeignKey, BooleanField, SlugField, ManyToManyField, TextField, DateTimeField, options, permalink, SET_NULL, Min, Max
+from django.db.models import Model, OneToOneField, CharField, IntegerField, URLField, PositiveIntegerField, FloatField, ForeignKey, BooleanField, SlugField, ManyToManyField, TextField, DateTimeField, options, permalink, SET_NULL, Min, Max, Manager
 from django.db.models.query import EmptyQuerySet
 from django.utils.http import urlencode
 from itertools import chain
@@ -51,20 +51,38 @@ CHOICES_VMAX_UNITS = (
 
 CHOICES_HOMOLOG_SPECIES = (
 	('B. subtilis', 'B. subtilis'),
+	('Bacillus subtilis 168', 'Bacillus subtilis 168'),
+	('Caulobacter crescentus NA1000', 'Caulobacter crescentus NA1000'),
 	('E. coli', 'E. coli'),
+	('Escherichia coli K-12 MG1655', 'Escherichia coli K-12 MG1655'),
+	('Francisella novicida U112', 'Francisella novicida U112'),
+	('Haemophilus influenzae Rd KW20', 'Haemophilus influenzae Rd KW20'),
+	('Mycobacterium tuberculosis H37Rv', 'Mycobacterium tuberculosis H37Rv'),
+	('Mycoplasma arthritidis 158L3-1', 'Mycoplasma arthritidis 158L3-1'),
+	('M. genitalium', 'M. genitalium'),
 	('M. hyopneumoniae', 'M. hyopneumoniae'),
 	('M. mobile', 'M. mobile'),
 	('M. pneumoniae', 'M. pneumoniae'),
+	('Mycoplasma pulmonis UAB CTIP', 'Mycoplasma pulmonis UAB CTIP'),
 	('S. coelicolor', 'S. coelicolor'),
 	('S. oneidensis', 'S. oneidensis'),
 )
 
 HOMOLOG_SPECIES_URLS = {
 	"B. subtilis": "http://www.genome.jp/dbget-bin/www_bget?bsu:%s",
+	"Bacillus subtilis 168": "http://www.genome.jp/dbget-bin/www_bget?bsu:%s",
+	"Caulobacter crescentus NA1000": "http://www.genome.jp/dbget-bin/www_bget?css:%s",
 	"E. coli": "http://www.genome.jp/dbget-bin/www_bget?eco:%s",
-	"M. hyopneumoniae": "http://www.genome.jp/dbget-bin/www_bget?mhj:%s",
+	"Escherichia coli K-12 MG1655": "http://www.genome.jp/dbget-bin/www_bget?eco:%s",
+	"Francisella novicida U112": "http://www.genome.jp/dbget-bin/www_bget?ftn:%s",
+	"Haemophilus influenzae Rd KW20": "http://www.genome.jp/dbget-bin/www_bget?hin:%s",
+	"Mycobacterium tuberculosis H37Rv": "http://www.genome.jp/dbget-bin/www_bget?mtu:%s",
+	"Mycoplasma arthritidis 158L3-1": "http://www.genome.jp/dbget-bin/www_bget?mat:%s",
+	"M. genitalium": "http://www.genome.jp/dbget-bin/www_bget?mge:%s",	
+	"M. hyopneumoniae": "http://www.genome.jp/dbget-bin/www_bget?mhj:%s",	
 	"M. mobile": "http://www.genome.jp/dbget-bin/www_bget?mmo:%s",
 	"M. pneumoniae": "http://www.genome.jp/dbget-bin/www_bget?mpn:%s",
+	"Mycoplasma pulmonis UAB CTIP": "http://www.genome.jp/dbget-bin/www_bget?mpu:%s",
 	"S. coelicolor": "http://www.genome.jp/dbget-bin/www_bget?sco:%s",
 	"S. oneidensis": "http://www.genome.jp/dbget-bin/www_bget?son:%s",
 }
@@ -79,13 +97,21 @@ CHOICES_CROSS_REFERENCE_SOURCES = (
 	('CMR', 'CMR'),
 	('EC', 'EC'),
 	('GenBank', 'GenBank'),
+	('GO', 'GO'),
 	('ISBN', 'ISBN'),
 	('KEGG', 'KEGG'),
 	('KNApSAcK', 'KNApSAcK'),
 	('LipidBank', 'LipidBank'),
-	('LIPIDMAPS', 'LIPIDMAPS'),
+	('LIPIDMAPS', 'LIPIDMAPS'),	
+	('MyMpn', 'MyMpn'),
+	('NCBI-CD', 'NCBI-CD'),
+	('NCBI-Gene', 'NCBI-Gene'),
+	('NCBI-Protein', 'NCBI-Protein'),
 	('PDB', 'PDB'),
 	('PDBCCD', 'PDBCCD'),
+	('Pfam', 'Pfam'),
+	('PIR', 'PIR'),
+	('ProSite', 'ProSite'),
 	('PubChem', 'PubChem'),
 	('PubMed', 'PubMed'),
 	('RefSeq', 'RefSeq'),
@@ -93,7 +119,8 @@ CHOICES_CROSS_REFERENCE_SOURCES = (
 	('SwissProt', 'SwissProt'),
 	('Taxonomy', 'Taxonomy'),
 	('ThreeDMET', 'ThreeDMET'),	
-	('URL', 'URL'),
+	('UniProt', 'UniProt'),	
+	('URL', 'URL'),	
 )
 
 CROSS_REFERENCE_SOURCE_URLS = {
@@ -106,20 +133,29 @@ CROSS_REFERENCE_SOURCE_URLS = {
 	"CMR": "http://cmr.jcvi.org/tigr-scripts/CMR/shared/GenePage.cgi?locus=%s",
 	"EC": "http://www.expasy.ch/enzyme/%s",
 	"GenBank": "http://www.ncbi.nlm.nih.gov/sites/gquery?term=%s",
+	"GO": "http://amigo.geneontology.org/cgi-bin/amigo/term_details?term=GO:%s", 
 	"ISBN": "http://isbndb.com/search-all.html?kw=%s",
 	"KEGG": "http://www.genome.jp/dbget-bin/www_bget?cpd:%s",
 	"KNApSAcK": "http://kanaya.naist.jp/knapsack_jsp/information.jsp?word=%s",
 	"LipidBank": "http://lipidbank.jp/cgi-bin/detail.cgi?id=%s",
 	"LIPIDMAPS": "http://www.lipidmaps.org/data/get_lm_lipids_dbgif.php?LM_ID=%s",
+	"MyMpn": "http://mycoplasma.test.crg.es/multimeric.php#%s",
+	"NCBI-CD": "http://www.ncbi.nlm.nih.gov/Structure/cdd/cddsrv.cgi?uid=%s",
+	'NCBI-Gene': "http://www.ncbi.nlm.nih.gov/sites/gene/?term=%s",
+	'NCBI-Protein': "http://www.ncbi.nlm.nih.gov/protein/?term=%s",
 	"PDB": "http://www.pdb.org/pdb/explore/explore.do?structureId=%s",
 	"PDBCCD": "http://www.ebi.ac.uk/pdbe-srv/pdbechem/chemicalCompound/show/%s",
+	"Pfam": "http://pfam.sanger.ac.uk/family/%s",
+	"PIR": "http://www.uniprot.org/uniprot/%s",
+	"ProSite": "http://prosite.expasy.org/cgi-bin/prosite/nicedoc.pl?%s",
 	"PubChem": "http://pubchem.ncbi.nlm.nih.gov/summary/summary.cgi?viewopt=PubChem&sid=%s",
 	"PubMed": "http://www.ncbi.nlm.nih.gov/pubmed/%s",
 	"RefSeq": "http://www.ncbi.nlm.nih.gov/nuccore/%s",
 	"SABIO-RK": "http://sabio.villa-bosch.de/kineticLawEntry.jsp?kinlawid=%s&viewData=true",
-	"SwissProt": "http://www.uniprot.org/uniprot/%s",
+	"SwissProt": "http://www.uniprot.org/uniprot/%s",	
 	"Taxonomy": "http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=%s",
 	"ThreeDMET": "http://www.3dmet.dna.affrc.go.jp/bin2/show_data.e?acc=%s",	
+	"UniProt": "http://www.uniprot.org/uniprot/%s",
 	"URL": "%s",
 }
 
@@ -158,6 +194,34 @@ CHOICES_SIGNAL_SEQUENCE_LOCATION = (
 CHOICES_SIGNAL_SEQUENCE_TYPE = (
 	('lipoprotein', 'Lipoprotein'),
 	('secretory', 'Secretory'),
+)
+
+CHOICES_COG_CATEGORIES = (
+	('D', 'Cell cycle control, cell division, chromosome partitioning'),
+	('M', 'Cell wall/membrane/envelope biogenesis'),
+	('N', 'Cell motility'),
+	('O', 'Post-translational modification, protein turnover, and chaperones'),
+	('T', 'Signal transduction mechanisms'),
+	('U', 'Intracellular trafficking, secretion, and vesicular transport'),
+	('V', 'Defense mechanisms'),
+	('W', 'Extracellular structures'),
+	('Y', 'Nuclear structure'),
+	('Z', 'Cytoskeleton'),
+	('A', 'RNA processing and modification'),
+	('B', 'Chromatin structure and dynamics'),
+	('J', 'Translation, ribosomal structure and biogenesis'),
+	('K', 'Transcription'),
+	('L', 'Replication, recombination and repair'),
+	('C', 'Energy production and conversion'),
+	('E', 'Amino acid transport and metabolism'),
+	('F', 'Nucleotide transport and metabolism'),
+	('G', 'Carbohydrate transport and metabolism'),
+	('H', 'Coenzyme transport and metabolism'),
+	('I', 'Lipid transport and metabolism'),
+	('P', 'Inorganic ion transport and metabolism'),
+	('Q', 'Secondary metabolites biosynthesis, transport, and catabolism'),
+	('R', 'General function prediction only'),
+	('S', 'Function unknown'),
 )
 
 ''' END: CHOICES '''
@@ -358,7 +422,7 @@ class UserProfile(Model):
 		
 ''' BEGIN: helper models '''
 class Evidence(Model):
-	value = TextField(blank=True, default='', verbose_name='Value')	
+	value = TextField(blank=True, default='', verbose_name='Value')
 	units = CharField(max_length=255, blank=True, null=True, verbose_name='Units')
 	is_experimentally_constrained = BooleanField(verbose_name='Is experimentally <br/>constrained')
 	species = CharField(max_length=255, blank=True, null=True, verbose_name='Species')
@@ -477,14 +541,14 @@ class BindingSite(EvidencedEntryData):
 		verbose_name = 'Binding site'
 		verbose_name_plural = 'Binding sites'	
 		
-class BiomassComposition(EvidencedEntryData):
-	concentration = FloatField(verbose_name='Concentration (mmol gDCW<sup>-1</sup>)', validators=[validators.MinValueValidator(0)])
-	compartment = ForeignKey('Compartment', related_name='biomass_compositions', verbose_name='Compartment')
+class IntracellularConcentration(EvidencedEntryData):
+	concentration = FloatField(verbose_name='Concentration (mM)', validators=[validators.MinValueValidator(0)])
+	compartment = ForeignKey('Compartment', related_name='intracellular_concentrationss', verbose_name='Compartment')
 	
 	class Meta:
 		ordering = ['-concentration']
-		verbose_name = 'Biomass composition'
-		verbose_name_plural = 'Biomass composition'		
+		verbose_name = 'Intracellular concentration'
+		verbose_name_plural = 'Intracellular concentration'		
 
 class Codon(EvidencedEntryData):
 	sequence = CharField(max_length=3, verbose_name='Sequence', validators=[
@@ -547,7 +611,7 @@ class EnzymeParticipant(EvidencedEntryData):
 		
 class Homolog(EvidencedEntryData):
 	xid = CharField(max_length=255, verbose_name='External ID')
-	species = CharField(max_length=20, choices=CHOICES_HOMOLOG_SPECIES, verbose_name='Species')
+	species = CharField(max_length=255, choices=CHOICES_HOMOLOG_SPECIES, verbose_name='Species')
 	
 	class Meta:
 		ordering = ['xid']
@@ -575,7 +639,7 @@ class Kinetics(EvidencedEntryData):
 		verbose_name='Kinetics'
 		verbose_name_plural = 'Kinetics'
 	
-class MediaComposition(EvidencedEntryData):
+class MediaConcentration(EvidencedEntryData):
 	concentration = FloatField(verbose_name='Concentration (mM)', validators=[validators.MinValueValidator(0)])
 	is_diffused = BooleanField(verbose_name='Is diffused')
 	
@@ -594,15 +658,15 @@ class MetaboliteMapCoordinate(EntryData):
 		verbose_name='Metabolite map coordinate'
 		verbose_name_plural = 'Metabolite map coordinates'
 		
-class ModificationReaction(EvidencedEntryData):
+class ModificationReactant(EvidencedEntryData):
 	molecule = ForeignKey('Molecule', related_name='modification_reactions', verbose_name='Molecule')
 	compartment = ForeignKey('Compartment', related_name='+', verbose_name='Compartment')
 	position = PositiveIntegerField(blank=True, null=True, verbose_name='Position')
 	
 	class Meta:
 		ordering = []
-		verbose_name='Protein monomer'
-		verbose_name_plural = 'Protein monomers'
+		verbose_name='Modification reactant'
+		verbose_name_plural = 'Modification reactants'
 		
 class ProstheticGroupParticipant(EvidencedEntryData):
 	metabolite = ForeignKey('Metabolite', related_name='prosthetic_group_participants', verbose_name='Metabolite')
@@ -647,18 +711,19 @@ class ReactionStoichiometryParticipant(EvidencedEntryData):
 		verbose_name='Molecule coefficient compartment'
 		verbose_name_plural = 'Molecule coefficient compartments'
 		
-class SignalSequence(EvidencedEntryData):
-	type = CharField(max_length=20, choices=CHOICES_SIGNAL_SEQUENCE_TYPE, verbose_name='Type')
-	location = CharField(max_length=1, choices=CHOICES_SIGNAL_SEQUENCE_LOCATION, verbose_name='Location')
-	length = PositiveIntegerField(verbose_name='Length (nt)')
+class Localization(EvidencedEntryData):
+	compartment = ForeignKey('Compartment', related_name='localizations', verbose_name='Compartment')
+	signal_sequence_type = CharField(max_length=20, blank=True, default='', choices=CHOICES_SIGNAL_SEQUENCE_TYPE, verbose_name='Signal sequence type')
+	signal_sequence_location = CharField(max_length=1, blank=True, default='', choices=CHOICES_SIGNAL_SEQUENCE_LOCATION, verbose_name='Signal sequence location')
+	signal_sequence_length = PositiveIntegerField(null=True, blank=True, verbose_name='Signal sequence length (nt)')
 	
 	class Meta:
-		ordering = ['type', 'location', 'length']
-		verbose_name = 'Signal sequence'
-		verbose_name_plural = 'Signal sequences'
+		ordering = ['signal_sequence_type', 'signal_sequence_location', 'signal_sequence_length']
+		verbose_name = 'Localization'
+		verbose_name_plural = 'Localizations'
 		
 class SimulationProperty(EntryData):
-	class_name = TextField(verbose_name = 'Class', db_index=True)
+	class_name = CharField(max_length = 255, verbose_name = 'Class', db_index=True)
 	property_name = CharField(max_length = 255, verbose_name = 'Property', db_index=True)	
 	
 	def __unicode__(self):
@@ -676,7 +741,37 @@ class Synonym(EntryData):
 		ordering = ['name']
 		verbose_name = 'Synonym'
 		verbose_name_plural = 'Synonyms'
-
+		
+class CogCategory(EvidencedEntryData):
+	xid = CharField(max_length=1, choices=CHOICES_COG_CATEGORIES, verbose_name='XID')
+	
+	class Meta:
+		ordering = ['xid']
+		verbose_name = 'COG category'
+		verbose_name_plural = 'COG categories'	
+		
+class ProteinDomain(EvidencedEntryData):
+	source = CharField(max_length=20, choices=CHOICES_CROSS_REFERENCE_SOURCES, verbose_name='Source')
+	xid = CharField(max_length=255, verbose_name='XID')
+	label = CharField(max_length=255, blank=True, default='', verbose_name='Label')
+	start_position = PositiveIntegerField(null=True, blank=True, verbose_name='Start position (aa)')
+	end_position = PositiveIntegerField(null=True, blank=True, verbose_name='End position (aa)')
+	score = FloatField(null=True, blank=True, verbose_name='Score')
+	
+	class Meta:
+		ordering = ['xid']
+		verbose_name = 'Protein domain'
+		verbose_name_plural = 'Protein domains'	
+		
+class CopyNumber(EvidencedEntryData):
+	is_expressed = BooleanField(verbose_name='Is expressed')
+	value = FloatField(null=True, blank=True, verbose_name='Value', validators=[validators.MinValueValidator(0)])
+	
+	class Meta:
+		ordering = ['is_expressed', 'value']
+		verbose_name = 'Copy number'
+		verbose_name_plural = 'Copy numbers'	
+		
 ''' END: helper models '''
 
 
@@ -760,7 +855,9 @@ class SpeciesComponent(Entry):
 		return ('public.views.detail', (), {'species_wid':self.species.wid, 'wid': self.wid})
 		
 	def get_all_references(self):
-		return self.references.all() | Reference.objects.filter(evidence__species_component__id = self.id)
+		refs = self.references.all()
+		
+		return chain(refs, Reference.objects.filter(evidence__species_component__id = self.id))
 		
 	#html formatting
 	def get_as_html_parameters(self, is_user_anonymous):
@@ -780,7 +877,7 @@ class SpeciesComponent(Entry):
 	def get_as_html_references(self, is_user_anonymous):
 		results = {}
 		for r in self.get_all_references():
-			key = r.authors + ' ' + r.editors
+			key = r.authors + ' ' + r.editors + ' ' + r.wid
 			results[key] = r.get_citation(True)
 			
 		keys = results.keys()
@@ -1025,7 +1122,7 @@ class Chromosome(Molecule):
 		return float(seq.count('G') + seq.count('C')) / float(len(seq))
 		
 	def get_transcription_units(self):
-		return list(set([g.transcription_units.all()[0] for g in self.genes.all()]))	
+		return self.transcription_units.all()
 		
 	#http://www.owczarzy.net/extinct.htm
 	def get_extinction_coefficient(self):	
@@ -1098,14 +1195,16 @@ class Chromosome(Molecule):
 		tus = []
 		for i in range(len(genesList)):
 			gene = genesList[i]
-			tu = gene.transcription_units.all()[0]
-			if iTUs.has_key(tu.wid):
-				iTu = iTUs[tu.wid]
-			else:
-				tus.append(tu)
-				iTu = nTus
-				iTUs[tu.wid] = iTu
-				nTus += 1
+			tu = None
+			if gene.transcription_units.count() > 0:
+				tu = gene.transcription_units.all()[0]
+				if iTUs.has_key(tu.wid):
+					iTu = iTUs[tu.wid]
+				else:
+					tus.append(tu)
+					iTu = nTus
+					iTUs[tu.wid] = iTu
+					nTus += 1
 				
 			iSegment = math.floor((gene.coordinate - 1) / ntPerSegment)
 			
@@ -1130,7 +1229,11 @@ class Chromosome(Molecule):
 				tip_title = gene.name
 			else:
 				tip_title = gene.wid
-			tip_content = 'Transcription unit: %s' % tu.name
+			if tu is not None:
+				tip_content = 'Transcription unit: %s' % tu.name
+			else:
+				tip_content = ''
+				
 			tip_title = tip_title.replace("'", "\'")
 			tip_content = tip_content.replace("'", "\'")
 				
@@ -1163,13 +1266,17 @@ class Chromosome(Molecule):
 		tfSites = ''
 		for tu in tus:
 			if tu.promoter_35_coordinate is not None:
-				tu_coordinate = tu.get_coordinate() + tu.promoter_35_coordinate
-				tu_length = tu.promoter_35_length
+				if tu.get_direction == 'f':
+					coordinate = tu.get_coordinate() + tu.promoter_35_coordinate
+				else:
+					coordinate = tu.get_coordinate() + tu.get_length() - 1 - tu.promoter_35_coordinate - tu.promoter_35_length + 1
+					
+				length = tu.promoter_35_length
 				
-				iSegment = math.floor((tu_coordinate - 1) / ntPerSegment)
+				iSegment = math.floor((coordinate - 1) / ntPerSegment)
 			
-				x = segmentLeft + ((tu_coordinate - 1) % ntPerSegment) / ntPerSegment * segmentW
-				w = max(1, x1 - min(segmentLeft + segmentW, x1 + tu_length / ntPerSegment * segmentW))
+				x = segmentLeft + ((coordinate - 1) % ntPerSegment) / ntPerSegment * segmentW
+				w = max(1, x1 - min(segmentLeft + segmentW, x1 + length / ntPerSegment * segmentW))
 				
 				y = chrTop + (iSegment + 1) * segmentHeight + 2
 					
@@ -1180,16 +1287,20 @@ class Chromosome(Molecule):
 				tip_title = tip_title.replace("'", "\'")
 					
 				promoters += '<a xlink:href="%s"><rect x="%s" y="%s" width="%s" height="%s" onmousemove="javascript: showToolTip(evt, \'%s\', \'%s\')" onmouseout="javascript: hideToolTip(evt);"/></a>' % (
-					tu.get_absolute_url(), x, y, w, featureHeight, tip_title, 'Promoter -35 box')
+					tu.get_absolute_url(), x, y, w, featureHeight, tip_title, 'Promoter -35 region')
 					
-			if tu.promoter_10_coordinate is not None:
-				tu_coordinate = tu.get_coordinate() + tu.promoter_10_coordinate
-				tu_length = tu.promoter_10_length
+			if tu.pribnow_box_coordinate is not None:
+				if tu.get_direction == 'f':
+					coordinate = tu.get_coordinate() + tu.pribnow_box_coordinate
+				else:
+					coordinate = tu.get_coordinate() + tu.get_length() - 1 - tu.pribnow_box_coordinate - tu.pribnow_box_length + 1
+					
+				length = tu.pribnow_box_length
 				
-				iSegment = math.floor((tu_coordinate - 1) / ntPerSegment)
+				iSegment = math.floor((coordinate - 1) / ntPerSegment)
 			
-				x = segmentLeft + ((tu_coordinate - 1) % ntPerSegment) / ntPerSegment * segmentW
-				w = max(1, x1 - min(segmentLeft + segmentW, x1 + tu_length / ntPerSegment * segmentW))
+				x = segmentLeft + ((coordinate - 1) % ntPerSegment) / ntPerSegment * segmentW
+				w = max(1, x1 - min(segmentLeft + segmentW, x1 + length / ntPerSegment * segmentW))
 				
 				y = chrTop + (iSegment + 1) * segmentHeight + 2
 				
@@ -1200,7 +1311,7 @@ class Chromosome(Molecule):
 				tip_title = tip_title.replace("'", "\'")
 					
 				promoters += '<a xlink:href="%s"><rect x="%s" y="%s" width="%s" height="%s" onmousemove="javascript: showToolTip(evt, \'%s\', \'%s\')" onmouseout="javascript: hideToolTip(evt);"/></a>' % (
-					tu.get_absolute_url(), x, y, w, featureHeight, tip_title, 'Promoter -10 box')
+					tu.get_absolute_url(), x, y, w, featureHeight, tip_title, 'Pribnow box')
 
 			for tr in tu.transcriptional_regulations.all():
 				if tr.binding_site is not None:	
@@ -1301,14 +1412,15 @@ class Chromosome(Molecule):
 			if gene.coordinate > end_coordinate or gene.coordinate + gene.length - 1 < start_coordinate:
 				continue
 			
-			tu = gene.transcription_units.all()[0]
-			if iTUs.has_key(tu.wid):
-				iTu = iTUs[tu.wid]
-			else:
-				tus.append(tu)
-				iTu = nTus
-				iTUs[tu.wid] = iTu
-				nTus += 1
+			if gene.transcription_units.count() > 0:
+				tu = gene.transcription_units.all()[0]
+				if iTUs.has_key(tu.wid):
+					iTu = iTUs[tu.wid]
+				else:
+					tus.append(tu)
+					iTu = nTus
+					iTUs[tu.wid] = iTu
+					nTus += 1
 			
 			if gene.direction == 'f':
 				x1 = chrL + float(gene.coordinate - start_coordinate) / length * chrW
@@ -1400,11 +1512,11 @@ class Chromosome(Molecule):
 					tip_title = tip_title.replace("'", "\'")
 						
 					promoters += '<a xlink:href="%s"><rect x="%s" y="%s" width="%s" height="%s" onmousemove="javascript: showToolTip(evt, \'%s\', \'%s\')" onmouseout="javascript: hideToolTip(evt);" style="opacity: %s;"/></a>' % (
-						tu.get_absolute_url(), x1, promoterY, x2 - x1, featureHeight, tip_title, 'Promoter -35 box', opacity)
+						tu.get_absolute_url(), x1, promoterY, x2 - x1, featureHeight, tip_title, 'Promoter -35 region', opacity)
 					
-			if tu.promoter_10_coordinate is not None:
-				tu_coordinate = tu.get_coordinate() + tu.promoter_10_coordinate
-				tu_length = tu.promoter_10_length
+			if tu.pribnow_box_coordinate is not None:
+				tu_coordinate = tu.get_coordinate() + tu.pribnow_box_coordinate
+				tu_length = tu.pribnow_box_length
 				
 				if not (tu_coordinate > end_coordinate or tu_coordinate + tu_length - 1 < start_coordinate):			
 					x1 = chrL + float(tu_coordinate - start_coordinate) / length * chrW
@@ -1425,7 +1537,7 @@ class Chromosome(Molecule):
 					tip_title = tip_title.replace("'", "\'")
 					
 					promoters += '<a xlink:href="%s"><rect x="%s" y="%s" width="%s" height="%s" onmousemove="javascript: showToolTip(evt, \'%s\', \'%s\')" onmouseout="javascript: hideToolTip(evt);" style="opacity: %s;"/></a>' % (
-						tu.get_absolute_url(), x1, promoterY, x2 - x1, featureHeight, tip_title, 'Promoter -10 box', opacity)
+						tu.get_absolute_url(), x1, promoterY, x2 - x1, featureHeight, tip_title, 'Pribnow box', opacity)
 
 			for tr in tu.transcriptional_regulations.all():
 				if tr.binding_site is not None and not (tr.binding_site.coordinate > end_coordinate or tr.binding_site.coordinate + tr.binding_site.length - 1 < start_coordinate):	
@@ -1659,9 +1771,9 @@ class Compartment(SpeciesComponent):
 		return arr
 		
 	#getters
-	def get_as_html_biomass_compositions(self, is_user_anonymous):
+	def get_as_html_intracellular_concentrationss(self, is_user_anonymous):
 		results = []
-		for bm in self.biomass_compositions.all():
+		for bm in self.intracellular_concentrationss.all():
 			if len(bm.metabolites.all()) == 0:
 				continue
 			m = bm.metabolites.all()[0]
@@ -1670,8 +1782,9 @@ class Compartment(SpeciesComponent):
 		
 	def get_as_html_protein_monomers(self, is_user_anonymous):
 		results = []
-		for p in self.protein_monomers.all():
-			results.append('<a href="%s">%s</a>' % (p.get_absolute_url(), p.wid))
+		for loc in self.localizations.all():
+			for p in loc.protein_monomers.all():
+				results.append('<a href="%s">%s</a>' % (p.get_absolute_url(), p.wid))
 		return format_list_html(results, comma_separated=True)
 		
 	def get_as_html_protein_complexes(self, is_user_anonymous):
@@ -1688,7 +1801,7 @@ class Compartment(SpeciesComponent):
 			('Name', {'fields': ['wid', 'name', 'synonyms', 'cross_references']}), 
 			('Classification', {'fields': ['type']}), 
 			('Content', {'fields': [
-				{'verbose_name': 'Metabolites (mM)', 'name': 'biomass_compositions'},
+				{'verbose_name': 'Metabolites (mM)', 'name': 'intracellular_concentrationss'},
 				{'verbose_name': 'Protein monomers', 'name': 'protein_monomers'},
 				{'verbose_name': 'Protein complexes', 'name': 'protein_complexes'},
 				]}),
@@ -1707,17 +1820,16 @@ class Gene(Molecule):
 	parent_ptr_molecule = OneToOneField(Molecule, related_name='child_ptr_gene', parent_link=True, verbose_name='Molecule')
 	
 	#additional fields
+	homologs = ManyToManyField(Homolog, blank=True, null=True, related_name='genes', verbose_name='Homologs')	
 	symbol = CharField(max_length=255, blank=True, default='', verbose_name='Symbol')
 	chromosome = ForeignKey(Chromosome, related_name='genes', verbose_name='Chromosome')
 	coordinate = PositiveIntegerField(verbose_name='Coordinate (nt)')
 	length = PositiveIntegerField(verbose_name='Length (nt)')
 	direction = CharField(max_length=10, choices=CHOICES_DIRECTION, verbose_name='Direction')
-	is_essential = ForeignKey(EntryBooleanData, verbose_name='Is essential', related_name='+')
-	expression = ForeignKey(EntryPositiveFloatData, verbose_name='Relative expression', related_name='+')
-	half_life = ForeignKey(EntryPositiveFloatData, verbose_name='Half life', related_name='+')
+	cog_categories = ManyToManyField(CogCategory, blank=True, null=True, related_name='genes', verbose_name='COG categories')
 	codons = ManyToManyField(Codon, blank=True, null=True, related_name='genes', verbose_name='Codons')
 	amino_acid = ForeignKey('Metabolite', blank=True, null=True, on_delete=SET_NULL, related_name='genes', verbose_name='Amino acid')
-	homologs = ManyToManyField(Homolog, blank=True, null=True, related_name='genes', verbose_name='Homologs')	
+	is_essential = ForeignKey(EntryCharData, blank=True, null=True, verbose_name='Is essential', related_name='+')	
 	
 	#getters	
 	def get_sequence(self):
@@ -1759,12 +1871,6 @@ class Gene(Molecule):
 				
 	def get_pi(self):
 		return calculate_nucleic_acid_pi(self.get_sequence())
-
-	def get_synthesis_rate(self):
-		return math.log(2) / self.half_life.value * self.expression.value
-		
-	def get_decay_rate(self):		
-		return math.log(2) / self.half_life.value
 		
 	#html formatting	
 	def get_as_html_codons(self, is_user_anonymous):
@@ -1797,6 +1903,13 @@ class Gene(Molecule):
 			self.get_gc_content() * 100,
 			format_sequence_as_html(self.get_sequence()))
 		
+	def get_as_html_cog_categories(self, is_user_anonymous):
+		results = []
+		for c in self.cog_categories.all():
+			label = CHOICES_COG_CATEGORIES[[x[0] for x in CHOICES_COG_CATEGORIES].index(c.xid)][1]
+			results.append(format_with_evidence(list_item = True, obj = c, txt = '%s: %s' % (c.xid, label)))
+		return format_list_html(results, force_list=True)
+		
 	#meta information
 	class Meta:
 		concrete_entry_model = True
@@ -1810,17 +1923,14 @@ class Gene(Molecule):
 				{'verbose_name': 'Transcription unit', 'name': 'transcription_units'},
 				{'verbose_name': 'Empirical formula (pH 7.5)', 'name': 'empirical_formula'},
 				{'verbose_name': 'Molecular weight (pH 7.5; Da)', 'name': 'molecular_weight'},
-				]}), 
-			('Functional genomics', {'fields': [
-				'is_essential', 
-				'expression', 
-				'half_life', 
-				'codons', 
-				'amino_acid',
 				{'verbose_name': 'Extinction coefficient <br/>(260 nm, 25C, pH 7.0)', 'name': 'extinction_coefficient'},
 				{'verbose_name': 'pI', 'name': 'pi'},
-				]}), 
+				]}),
 			('Function', {'fields': [
+				'cog_categories',
+				'is_essential', 
+				'codons', 
+				'amino_acid',
 				{'verbose_name': 'Reaction participant', 'name':'reaction_stoichiometry_participants'},
 				{'verbose_name': 'Complex subunit', 'name':'protein_complex_biosythesis_participants'},
 				]}),
@@ -1829,7 +1939,10 @@ class Gene(Molecule):
 			('Metadata', {'fields': [{'verbose_name': 'Created', 'name': 'created_user'}, {'verbose_name': 'Last updated', 'name': 'last_updated_user'}]}),
 			]
 		field_list = [
-			'id', 'wid', 'name', 'symbol', 'synonyms', 'cross_references', 'homologs', 'type', 'chromosome', 'coordinate', 'length', 'direction',  'is_essential', 'expression', 'half_life', 'codons', 'amino_acid', 'comments', 'references', 'created_user', 'created_date', 'last_updated_user', 'last_updated_date', 
+			'id', 'wid', 'name', 'symbol', 'synonyms', 'cross_references', 'homologs', 'type', 'chromosome', 'coordinate', 'length', 'direction', 
+			'cog_categories', 'codons', 'amino_acid', 'is_essential', 
+			'comments', 'references', 
+			'created_user', 'created_date', 'last_updated_user', 'last_updated_date', 
 			]
 		facet_fields = ['type', 'chromosome', 'direction', 'is_essential', 'amino_acid']
 		verbose_name='Gene'
@@ -1871,8 +1984,8 @@ class Metabolite(Molecule):
 	pi = FloatField(null=True, blank=True, verbose_name='pI', validators=[validators.MinValueValidator(0)])
 	log_p = FloatField(null=True, blank=True, verbose_name='logP')
 	log_d = FloatField(null=True, blank=True, verbose_name='logD (pH 7.5)')
-	biomass_composition = ManyToManyField(BiomassComposition, blank=True, null=True, related_name='metabolites', verbose_name='Biomass composition (SP4 media, <br/>5% CO<sub>2</sub>, 37C; mmol gDCW<sup>-1</sup>)')
-	media_composition = ForeignKey(MediaComposition, blank=True, null=True, on_delete=SET_NULL, related_name='metabolites', verbose_name='Media composition (SP4; mM)')
+	intracellular_concentrations = ManyToManyField(IntracellularConcentration, blank=True, null=True, related_name='metabolites', verbose_name='Intracellular concentration (mM)')
+	media_concentration = ForeignKey(MediaConcentration, blank=True, null=True, on_delete=SET_NULL, related_name='metabolites', verbose_name='Media concentration (Hayflick; mM)')
 	map_coordinates = ManyToManyField(MetaboliteMapCoordinate, blank=True, null=True, related_name='metabolites', verbose_name='Map coordinates')
 	
 	#getters
@@ -1896,21 +2009,21 @@ class Metabolite(Molecule):
 		
 	#html formatting
 	def get_as_html_structure(self, is_user_anonymous):
-		from public.helpers import draw_molecule
+		from public.helpers import draw_molecule		
 		return draw_molecule(self.smiles, 'svg', 636, 150)
 	
 	def get_as_html_empirical_formula(self, is_user_anonymous):
 		from public.helpers import EmpiricalFormula
 		return EmpiricalFormula(self.empirical_formula).get_as_html()		
 		
-	def get_as_html_biomass_composition(self, is_user_anonymous):
+	def get_as_html_intracellular_concentrations(self, is_user_anonymous):
 		results = []
-		for b in self.biomass_composition.all():
+		for b in self.intracellular_concentrations.all():
 			results.append(format_with_evidence(list_item = True, obj = b, txt = '%s [<a href="%s">%s</a>]' % (b.concentration, b.compartment.get_absolute_url(), b.compartment.wid)))
 		return format_list_html(results, force_list=True)
 		
-	def get_as_html_media_composition(self, is_user_anonymous):
-		m = self.media_composition
+	def get_as_html_media_concentration(self, is_user_anonymous):
+		m = self.media_concentration
 		if m is None:
 			return
 		if m.is_diffused:
@@ -1958,7 +2071,7 @@ class Metabolite(Molecule):
 				'pi', 
 				'log_p', 
 				'log_d']}),
-			('Concentrations', {'fields': ['biomass_composition', 'media_composition']}), 
+			('Concentrations', {'fields': ['intracellular_concentrations', 'media_concentration']}), 
 			('Function', {'fields': [
 				{'verbose_name': 'Coenzyme', 'name':'coenzyme_participants'},				
 				{'verbose_name': 'Complex subunit', 'name':'protein_complex_biosythesis_participants'},
@@ -1972,7 +2085,7 @@ class Metabolite(Molecule):
 		field_list = [
 			'id', 'wid', 'name', 'traditional_name', 'iupac_name', 'synonyms', 'cross_references', 'type',
 			'empirical_formula', 'smiles', 'charge', 'is_hydrophobic', 'volume', 'deltag_formation', 'pka', 'pi', 'log_p', 'log_d',
-			'biomass_composition', 'media_composition', 
+			'intracellular_concentrations', 'media_concentration', 
 			'map_coordinates',
 			'comments',
 			'references', 
@@ -2340,8 +2453,87 @@ class Process(SpeciesComponent):
 				
 			if len(set(order)) < len(order):
 				raise ValidationError({'initialization_order': 'Initialization order must unique within a species'})
+
+					
+class ProteinComplexManager(Manager):
+	def set_from_text_biosynthesis(self, txt):
+		m = re.match('^\[([a-zA-Z0-9_]+)\]: (.*?)$', txt)
+		if m is None:
+			gblComp = None
+		else:
+			gblComp = m.group(1)
+			txt = m.group(2)
+		
+		m = re.match('^(.*?) (<*)==(>*) (.*?)$', txt)
+		if m is None:
+			raise ValidationError({'stoichiometry': 'Invalid'})
+			
+		if m.group(2) == '<' and m.group(3) == '>':
+			direction = 'r'
+		elif m.group(2) == '<' and m.group(3) == '':
+			direction = 'b'
+		elif m.group(2) == '' and m.group(3) == '>':
+			direction = 'f'
+		else:
+			raise ValidationError({'stoichiometry': 'Invalid direction'})
+			
+		if not m.group(1):
+			lhsTxts = []
+		else:
+			lhsTxts = re.split(' \+ ', m.group(1))
+		if not m.group(4):
+			rhsTxts = []
+		else:
+			rhsTxts = re.split(' \+ ', m.group(4))
+		
+		participants = []
+		for lhsTxt in lhsTxts:
+			m = re.match('^\(([0-9\.]+)\) (.*?)$', lhsTxt)
+			if m is None:
+				coeff = 1
+			else:
+				coeff = float(m.group(1))
+				lhsTxt = m.group(2)
+				
+			m = re.match('^(.*?)\[([a-zA-Z0-9_]+)\]$', lhsTxt)
+			if m is None:
+				comp = gblComp
+				mol = lhsTxt
+			else:
+				comp = m.group(2)
+				mol = m.group(1)
+				
+			participants.append({
+				'molecule': mol,
+				'coefficient': -1 * coeff,
+				'compartment': comp,
+				})
+		for rhsTxt in rhsTxts:
+			m = re.match('^\(([0-9\.]+)\) (.*?)$', rhsTxt)
+			if m is None:
+				coeff = 1
+			else:
+				coeff = float(m.group(1))
+				rhsTxt = m.group(2)
+				
+			m = re.match('^(.*?)\[([a-zA-Z0-9_]+)\]$', rhsTxt)
+			if m is None:
+				comp = gblComp
+				mol = rhsTxt
+			else:
+				comp = m.group(2)
+				mol = m.group(1)
+				
+			participants.append({
+				'molecule': mol,
+				'coefficient': coeff,
+				'compartment': comp,
+				})
+		return participants
 		
 class ProteinComplex(Protein):
+	objects = ProteinComplexManager()
+	
 	#parent pointer
 	parent_ptr_protein = OneToOneField(Protein, related_name='child_ptr_protein_complex', parent_link=True, verbose_name='Protein')
 	
@@ -2349,13 +2541,14 @@ class ProteinComplex(Protein):
 	biosynthesis = ManyToManyField(ProteinComplexBiosythesisParticipant, related_name='protein_complexes', verbose_name='Biosynthesis')
 	disulfide_bonds = ManyToManyField(DisulfideBond, blank=True, null=True, related_name='protein_complexes', verbose_name='Disulfide bonds (pH 7.5)')	
 	formation_process = ForeignKey('Process', blank=True, null=True, on_delete=SET_NULL, related_name='formed_complexes', verbose_name='Formation process')
+	localization = ForeignKey(Compartment, blank=True, null=True, on_delete=SET_NULL, related_name='protein_complexes', verbose_name='Localization')
 	
 	#getters
 	def get_num_subunits(self):
 		n = 0
 		for subunit in self.biosynthesis.all():
 			if subunit.coefficient < 0:
-				if subunit.molecule.model_type in ['TranscriptionUnit', 'Gene', 'ProteinMonomer']:
+				if subunit.molecule.model_type in ['Rna', 'ProteinMonomer']:
 					n -= subunit.coefficient
 				elif subunit.molecule.model_type is 'ProteinComplex':
 					n -= subunit.coefficient * getEntry(species_wid = self.species.wid, wid = subunit.molecule.wid).get_num_subunits()
@@ -2377,31 +2570,7 @@ class ProteinComplex(Protein):
 		return formula
 	
 	def get_localization(self):
-		from public.helpers import getModel
-		
-		localizations = []
-		for participant in self.biosynthesis.all():
-			if participant.coefficient > 0:
-				continue
-				
-			molecule = participant.molecule
-			molecule = getModel(molecule.model_type).objects.get(id=molecule.id)
-			if isinstance(molecule, ProteinMonomer):
-				localizations.append(molecule.localization)
-			elif isinstance(molecule, ProteinComplex):
-				localizations.append(molecule.get_localization())
-				
-		localizations = list(set(localizations))
-		if len(localizations) == 1:
-			return localizations[0]
-		
-		if len(localizations) == 2 and len(set(['c', 'm']) & set([x.wid for x in localizations])) == 2:
-			return Compartment.objects.get(species__id=self.species.id, wid='m')
-		
-		if len(localizations) == 3 and len(set(['c', 'm', 'e']) & set([x.wid for x in localizations])) == 3:
-			return Compartment.objects.get(species__id=self.species.id, wid='m')
-	
-		raise TypeError(str(localizations))
+		return self.localization
 		
 	def get_half_life(self):
 		from public.helpers import getModel
@@ -2414,10 +2583,14 @@ class ProteinComplex(Protein):
 			molecule = participant.molecule
 			molecule = getModel(molecule.model_type).objects.get(id=molecule.id)
 			
-			if isinstance(molecule, Protein):
-				val += -participant.coefficient * molecule.get_molecular_weight() * molecule.get_half_life()
-			elif isinstance(molecule, Gene):
-				val += -participant.coefficient * molecule.get_molecular_weight() * molecule.half_life.value
+			hl = None
+			if isinstance(molecule, ProteinComplex):
+				hl = molecule.get_half_life()
+			elif isinstance(molecule, (ProteinMonomer, Rna)):
+				hl = molecule.half_life.value
+				
+			if hl is not None:
+				val += -participant.coefficient * molecule.get_molecular_weight() * hl
 				
 		return val / self.get_molecular_weight()
 		
@@ -2461,7 +2634,7 @@ class ProteinComplex(Protein):
 				
 			molecule = participant.molecule
 			molecule = getModel(molecule.model_type).objects.get(id=molecule.id)
-			if isinstance(molecule, (Protein, Gene, )):
+			if isinstance(molecule, (Protein, Rna, )):
 				val += participant.coefficient * molecule.get_extinction_coefficient()
 				
 		return val
@@ -2532,7 +2705,7 @@ class ProteinComplex(Protein):
 			('Synthesis', {'fields': [
 				'formation_process', 
 				'chaperones', 
-				{'verbose_name': 'Localization', 'name': 'localization'},
+				'localization',
 				]}), 
 			('Regulation', {'fields': ['regulatory_rule']}),
 			('Function', {'fields': [
@@ -2549,8 +2722,7 @@ class ProteinComplex(Protein):
 		field_list = [
 			'id', 'wid', 'name', 'synonyms', 'cross_references',
 			'type', 
-			'biosynthesis', 'disulfide_bonds', 'prosthetic_groups', 'dna_footprint',
-			'formation_process', 'chaperones', 
+			'biosynthesis', 'disulfide_bonds', 'prosthetic_groups', 'chaperones', 'formation_process', 'localization', 'dna_footprint',
 			'regulatory_rule',
 			'comments',
 			'references', 
@@ -2610,7 +2782,7 @@ class ProteinComplex(Protein):
 				else:
 					molecule_type = molecule['model_type']
 				molecule_len = None
-				if molecule_type == 'Gene':
+				if molecule_type == 'Rna':
 					if isinstance(molecule, Entry):
 						molecule_len = molecule.length
 					else:
@@ -2629,7 +2801,7 @@ class ProteinComplex(Protein):
 					else:
 						molecule_len = gene['length']
 				
-				if b['residue'] is not None and not issubclass(getModel(molecule_type), (ProteinMonomer, Gene, )):
+				if b['residue'] is not None and not issubclass(getModel(molecule_type), (ProteinMonomer, Rna, )):
 					raise ValidationError({'biosynthesis': 'Residue must be null'})
 				
 				if b['residue'] is not None and b['residue'] > molecule_len:
@@ -2642,8 +2814,11 @@ class ProteinMonomer(Protein):
 	#additional fields
 	gene = ForeignKey(Gene, related_name='protein_monomers', verbose_name='Gene')	
 	is_n_terminal_methionine_cleaved = ForeignKey(EntryBooleanData, verbose_name='Is N-terminal methionine cleaved', related_name='+')
-	localization = ForeignKey(Compartment, related_name='protein_monomers', verbose_name='Localization')
-	signal_sequence = ForeignKey(SignalSequence, blank=True, null=True, related_name='protein_monomers', on_delete=SET_NULL, verbose_name='Sequence sequence')
+	localization = ForeignKey(Localization, blank=True, null=True, related_name='protein_monomers', on_delete=SET_NULL, verbose_name='Localization')
+	domains = ManyToManyField(ProteinDomain, blank=True, null=True, related_name='protein_monomers', verbose_name='Domains')
+	copy_number = ForeignKey(CopyNumber, blank=True, null=True, on_delete=SET_NULL, verbose_name='Copy number', related_name='+')
+	translation_rate = ForeignKey(EntryPositiveFloatData, blank=True, null=True, on_delete=SET_NULL, verbose_name='Translation rate', related_name='+')
+	half_life = ForeignKey(EntryPositiveFloatData, blank=True, null=True, on_delete=SET_NULL, verbose_name='Half life (min)', related_name='+')
 
 	#getters
 	def get_sequence(self):
@@ -2745,8 +2920,8 @@ class ProteinMonomer(Protein):
 
 		value = pH			
 		
-	def get_half_life(self):	
-		return 20 * 60
+	def get_half_life(self):
+		return self.half_life
 		
 	#http://ca.expasy.org/tools/protparam-doc.html
 	def get_instability(self):
@@ -2813,11 +2988,15 @@ class ProteinMonomer(Protein):
 		from public.helpers import format_sequence_as_html
 		return format_sequence_as_html(self.get_sequence())
 		
-	def get_as_html_signal_sequence(self, is_user_anonymous):
-		ss = self.signal_sequence
-		if ss is None:
+	def get_as_html_localization(self, is_user_anonymous):
+		loc = self.localization
+		if loc is None:
 			return
-		return format_with_evidence(obj = ss, txt = 'Type: %s, Location: %s, Length: %s (nt)' % (ss.type, ss.location, ss.length))
+		if loc.signal_sequence_type is None:
+			return format_with_evidence(obj = loc, txt = 'Compartment: <a href="%s">%s</a>' % (loc.compartment.get_absolute_url(), loc.compartment.name))
+		else:
+			return format_with_evidence(obj = loc, txt = 'Compartment: <a href="%s">%s</a>, Type: %s, Location: %s, Length: %s (nt)' % 
+				(loc.compartment.get_absolute_url(), loc.compartment.name, loc.signal_sequence_type, loc.signal_sequence_location, loc.signal_sequence_length))
 		
 	def get_as_html_disulfide_bonds(self, is_user_anonymous):
 		results = [];
@@ -2836,6 +3015,37 @@ class ProteinMonomer(Protein):
 	
 	def get_as_html_gravy(self, is_user_anonymous):
 		return self.get_gravy()		
+	
+	def get_as_html_domains(self, is_user_anonymous):
+		results = []
+		for d in self.domains.all():
+			url = CROSS_REFERENCE_SOURCE_URLS[d.source] % d.xid
+			str = '%s <a href="%s">%s</a>: %d-%d' % (d.source, url, d.label, d.start_position, d.end_position)
+			if d.score is not None:
+				str += '  Score: %.3f)' % d.score			
+			results.append(str)
+		return format_list_html(results, force_list=True)
+	
+	def get_as_html_copy_number(self, is_user_anonymous):
+		c = self.copy_number
+		if c is None:
+			return
+		if c.is_expressed:		
+			return format_with_evidence(list_item = True, obj = c, txt = 'Expressed with %.3f copies' % c.value)
+		else:
+			return format_with_evidence(list_item = True, obj = c, txt = 'Not expressed')
+	
+	def get_as_html_translation_rate(self, is_user_anonymous):
+		r = self.translation_rate
+		if r is None:
+			return
+		return format_with_evidence(list_item = True, obj = r, txt = '%.3f %s' % (r.value, r.units))
+		
+	def get_as_html_half_life(self, is_user_anonymous):
+		r = self.half_life
+		if r is None:
+			return
+		return format_with_evidence(list_item = True, obj = r, txt = '%.3f %s' % (r.value, r.units))
 
 	#meta information
 	class Meta:	
@@ -2848,7 +3058,7 @@ class ProteinMonomer(Protein):
 			('Structure', {'fields': [
 				{'verbose_name': 'Sequence', 'name': 'sequence'}, 
 				'is_n_terminal_methionine_cleaved', 
-				'signal_sequence', 
+				'domains',
 				'prosthetic_groups', 
 				'disulfide_bonds', 
 				'dna_footprint',
@@ -2862,8 +3072,16 @@ class ProteinMonomer(Protein):
 				{'verbose_name': 'GRAVY (25C, pH 7.0)', 'name': 'gravy'},
 				{'verbose_name': 'Half life (OD (600 nm) = 0.3, <br/>M9 media, 36C; min)', 'name': 'half_life'},
 				]}), 
-			('Synthesis', {'fields': ['localization', 'chaperones',]}), 
-			('Regulation', {'fields': ['regulatory_rule']}), 
+			('Synthesis', {'fields': [
+				'localization', 
+				'chaperones',
+				]}), 
+			('Expression', {'fields': [
+				'copy_number', 
+				'translation_rate', 
+				'half_life',
+				'regulatory_rule'
+			]}), 
 			('Function', {'fields': [
 				{'verbose_name': 'Enzyme', 'name': 'enzyme_participants'},
 				{'verbose_name': 'Transcriptional regulation', 'name': 'transcriptional_regulations'},
@@ -2879,19 +3097,19 @@ class ProteinMonomer(Protein):
 			'id', 'wid', 'name', 'synonyms', 'cross_references',
 			'type', 
 			'gene', 
-			'is_n_terminal_methionine_cleaved', 'signal_sequence', 'prosthetic_groups', 'dna_footprint', 
-			'localization', 'chaperones',
+			'is_n_terminal_methionine_cleaved', 'localization', 'domains', 'prosthetic_groups', 'dna_footprint', 'chaperones',
+			'copy_number', 'translation_rate', 'half_life',
 			'regulatory_rule', 
 			'comments',
 			'references', 
 			'created_user', 'created_date', 'last_updated_user', 'last_updated_date', 
 			]
-		facet_fields = ['type', 'is_n_terminal_methionine_cleaved__value', 'signal_sequence__type', 'signal_sequence__location', 'dna_footprint__binding', 'dna_footprint__region', 'localization', 'chaperones']
+		facet_fields = ['type', 'is_n_terminal_methionine_cleaved__value', 'localization__signal_sequence_type', 'localization__signal_sequence_location', 'dna_footprint__binding', 'dna_footprint__region', 'localization', 'chaperones']
 		verbose_name='Protein monomer'
 		verbose_name_plural = 'Protein monomers'
 		
 		def clean(model, obj_data, all_obj_data=None, all_obj_data_by_model=None):
-			if obj_data['signal_sequence'] is not None:
+			if obj_data['localization'] is not None:
 				if all_obj_data is None:
 					gene = Gene.objects.get(species__wid=obj_data['species'], wid=obj_data['gene'])
 				else:
@@ -2901,17 +3119,254 @@ class ProteinMonomer(Protein):
 				else:
 					mon_len = gene['length'] / 3
 				
-				if obj_data['signal_sequence']['length'] > mon_len:
-					raise ValidationError({'signal_sequence': 'Length must be less than protein length'})
+				if obj_data['localization']['signal_sequence_length'] > mon_len:
+					raise ValidationError({'localization': 'Length must be less than protein length'})
+					
+class Rna(Molecule):
+	#parent pointer
+	parent_ptr_molecule = OneToOneField(Molecule, related_name='child_ptr_rna', parent_link=True, verbose_name='Molecule')
+	
+	#additional fields
+	chromosome = ForeignKey(Chromosome, related_name='rnas', verbose_name='Chromosome')
+	transcription_units = ManyToManyField('TranscriptionUnit', related_name='rnas', verbose_name='Transcription units')
+	genes = ManyToManyField(Gene, blank=True, null=True, related_name='rnas', verbose_name='Genes')
+	coordinate = IntegerField(null=True, blank=True, verbose_name='Coordinate (nt)')
+	length = PositiveIntegerField(verbose_name='Length (nt)')
+	direction = CharField(max_length=10, choices=CHOICES_DIRECTION, verbose_name='Direction')	
+	half_life = ForeignKey(EntryPositiveFloatData, blank=True, null=True, on_delete=SET_NULL, verbose_name='Half life (min)', related_name='+')
+	
+	#getters
+	def get_chromosome(self):
+		return self.chromosome
+		
+	def get_coordinate(self):
+		return self.coordinate
+		
+	def get_length(self):
+		return self.length
+		
+	def get_direction(self):
+		return self.direction
+		
+	def get_sequence(self):
+		seq = self.get_chromosome().sequence[self.get_coordinate() - 1:self.get_coordinate() - 1 + self.get_length()]
+		if self.get_direction() == 'r':
+			seq = unicode(Seq(seq, IUPAC.unambiguous_dna).reverse_complement())
+		return seq
+		
+	def get_empirical_formula(self):
+		from public.helpers import EmpiricalFormula
+		
+		seq = self.get_sequence()
+		return \
+			+ Metabolite.objects.get(species__id=self.species.id, wid='AMP').get_empirical_formula() * seq.count('A') \
+			+ Metabolite.objects.get(species__id=self.species.id, wid='GMP').get_empirical_formula() * seq.count('C') \
+			+ Metabolite.objects.get(species__id=self.species.id, wid='GMP').get_empirical_formula() * seq.count('G') \
+			+ Metabolite.objects.get(species__id=self.species.id, wid='UMP').get_empirical_formula() * seq.count('T') \
+			- EmpiricalFormula(H=1, O=1) * (len(seq)-1)		
 
+	#http://www.owczarzy.net/extinct.htm
+	def get_extinction_coefficient(self):	
+		from public.helpers import ExtinctionCoefficient
+		
+		seq = Seq(self.get_sequence(), IUPAC.unambiguous_dna).transcribe()
+		
+		value = 0;
+		for i in range(len(seq) - 1):
+			value += ExtinctionCoefficient.pairwise_rna[seq[i]][seq[i+1]]
+		for i in range(len(seq)):
+			value -= ExtinctionCoefficient.single_rna[seq[i]]
+		return value
+				
+	def get_pi(self):
+		return calculate_nucleic_acid_pi(self.get_sequence())
+		
+	#html formatting
+	def get_as_html_structure(self, is_user_anonymous):
+		return self.get_chromosome().get_as_html_structure(is_user_anonymous, 
+			zoom = 1, 
+			start_coordinate = self.get_coordinate() - 500, 
+			end_coordinate = self.get_coordinate() + self.get_length() + 500, 
+			highlight_wid = [self.wid] + [g.wid for g in self.genes.all()])
+	
+	def get_as_html_transcription_units(self, is_user_anonymous):
+		results = []
+		for g in self.transcription_units.all():
+			results.append('<a href="%s">%s</a>' % (g.get_absolute_url(), g.wid, ))
+		return format_list_html(results, comma_separated=True)
+	
+	def get_as_html_genes(self, is_user_anonymous):
+		results = []
+		for g in self.genes.all():
+			results.append('<a href="%s">%s</a>' % (g.get_absolute_url(), g.wid, ))
+		return format_list_html(results, comma_separated=True)
+		
+	def get_as_html_sequence(self, is_user_anonymous):
+		from public.helpers import format_sequence_as_html
+		
+		direction = CHOICES_DIRECTION[[x[0] for x in CHOICES_DIRECTION].index(self.get_direction())][1]		
+		
+		return 'Chromosome: <a href="%s">%s</a>, Coordinate: %s, Length: %s, Direction: %s, Sequence: %s' % (
+			self.get_chromosome().get_absolute_url(), self.get_chromosome().wid, 
+			self.get_coordinate(), self.get_length(), direction, 
+			format_sequence_as_html(self.get_sequence()))		
+
+	def get_as_html_half_life(self, is_user_anonymous):
+		r = self.half_life
+		if r is None:
+			return
+		return format_with_evidence(list_item = True, obj = r, txt = '%.3f %s' % (r.value, r.units))		
+
+	#meta information
+	class Meta:
+		concrete_entry_model = True
+		fieldsets = [
+			('Type', {'fields': ['model_type']}),
+			('Name', {'fields': ['wid', 'name', 'synonyms', 'cross_references']}), 
+			('Classification', {'fields': ['type']}),
+			('Structure (Hayflick media, 37C)', {'fields': [
+				{'verbose_name': 'Structure', 'name': 'structure'},
+				'chromosome',
+				'transcription_units',
+				'genes',
+				'coordinate', 'length', 'direction',
+				{'verbose_name': 'Sequence', 'name': 'sequence'},
+				]}),	
+			('Expression', {'fields': [
+				'half_life',
+				]}),
+			('Function', {'fields': [
+				{'verbose_name': 'Reaction participant', 'name':'reaction_stoichiometry_participants'},
+				{'verbose_name': 'Complex subunit', 'name':'protein_complex_biosythesis_participants'},
+				]}),
+			('Parameters', {'fields': ['parameters']}),
+			('Comments', {'fields': ['comments', 'references']}),
+			('Metadata', {'fields': [{'verbose_name': 'Created', 'name': 'created_user'}, {'verbose_name': 'Last updated', 'name': 'last_updated_user'}]}),
+			]
+		field_list = [
+			'id', 'wid', 'name', 'synonyms', 'cross_references',
+			'type', 
+			'chromosome', 'transcription_units', 'genes',
+			'coordinate', 'length', 'direction',
+			'half_life',
+			'comments',
+			'references', 
+			'created_user', 'created_date', 'last_updated_user', 'last_updated_date', 
+			]
+		facet_fields = ['type']
+		verbose_name ='RNA'
+		verbose_name_plural = 'RNA'
+		
+		def clean(model, obj_data, all_obj_data=None, all_obj_data_by_model=None):				
+			chr_wids = []
+			if all_obj_data is None:
+				for tu_wid in obj_data['transcription_units']:
+					chr_wids.append(TranscriptionUnit.objects.get(species__wid=obj_data['species'], wid=tu_wid).chromosome.wid)				
+				for gene_wid in obj_data['genes']:
+					chr_wids.append(Gene.objects.get(species__wid=obj_data['species'], wid=gene_wid).chromosome.wid)				
+			else:
+				for tu_wid in obj_data['transcription_units']:
+					if isinstance(all_obj_data[tu_wid], Entry):
+						chr_wids.append(all_obj_data[tu_wid].chromosome.wid)
+					else:
+						chr_wids.append(all_obj_data[tu_wid]['chromosome'])
+				
+				for gene_wid in obj_data['genes']:
+					if isinstance(all_obj_data[gene_wid], Entry):
+						chr_wids.append(all_obj_data[gene_wid].chromosome.wid)
+					else:
+						chr_wids.append(all_obj_data[gene_wid]['chromosome'])
+					
+			if len(set(chr_wids)) > 1:
+				raise ValidationError({'genes': 'Transcription units and genes must all belong to the same chromosome'})
+		
+					
+class ReactionManager(Manager):
+	def set_from_text_stoichiometry(self, txt):
+		m = re.match('^\[([a-zA-Z0-9_]+)\]: (.*?)$', txt)
+		if m is None:
+			gblComp = None
+		else:
+			gblComp = m.group(1)
+			txt = m.group(2)
+		
+		m = re.match('^(.*?) (<*)==(>*) (.*?)$', txt)
+		if m is None:
+			raise ValidationError({'stoichiometry': 'Invalid'})
+			
+		if m.group(2) == '<' and m.group(3) == '>':
+			direction = 'r'
+		elif m.group(2) == '<' and m.group(3) == '':
+			direction = 'b'
+		elif m.group(2) == '' and m.group(3) == '>':
+			direction = 'f'
+		else:
+			raise ValidationError({'stoichiometry': 'Invalid direction'})
+			
+		if not m.group(1):
+			lhsTxts = []
+		else:
+			lhsTxts = re.split(' \+ ', m.group(1))
+		if not m.group(4):
+			rhsTxts = []
+		else:
+			rhsTxts = re.split(' \+ ', m.group(4))
+
+		participants = []
+		for lhsTxt in lhsTxts:
+			m = re.match('^\(([0-9\.]+)\) (.*?)$', lhsTxt)
+			if m is None:
+				coeff = 1
+			else:
+				coeff = float(m.group(1))
+				lhsTxt = m.group(2)
+				
+			m = re.match('^(.*?)\[([a-zA-Z0-9_]+)\]$', lhsTxt)
+			if m is None:
+				comp = gblComp
+				mol = lhsTxt
+			else:
+				comp = m.group(2)
+				mol = m.group(1)
+				
+			participants.append({
+				'molecule': mol,
+				'coefficient': -1 * coeff,
+				'compartment': comp,
+				})
+		for rhsTxt in rhsTxts:
+			m = re.match('^\(([0-9\.]+)\) (.*?)$', rhsTxt)
+			if m is None:
+				coeff = 1
+			else:
+				coeff = float(m.group(1))
+				rhsTxt = m.group(2)
+				
+			m = re.match('^(.*?)\[([a-zA-Z0-9_]+)\]$', rhsTxt)
+			if m is None:
+				comp = gblComp
+				mol = rhsTxt
+			else:
+				comp = m.group(2)
+				mol = m.group(1)
+				
+			participants.append({
+				'molecule': mol,
+				'coefficient': coeff,
+				'compartment': comp,
+				})
+		return participants
+					
 class Reaction(SpeciesComponent):
+	objects = ReactionManager()
+	
 	#parent pointer
 	parent_ptr_species_component = OneToOneField(SpeciesComponent, related_name='child_ptr_reaction', parent_link=True, verbose_name='Species component')
 	
 	#additional fields
-	stoichiometry = ManyToManyField(ReactionStoichiometryParticipant, related_name='reactions', verbose_name='Stoichiometry')
+	stoichiometry = ManyToManyField(ReactionStoichiometryParticipant, blank=True, null=True, related_name='reactions', verbose_name='Stoichiometry')
 	direction = CharField(max_length=1, choices=CHOICES_REACTION_DIRECTION, verbose_name='Direction') 
-	modification = ForeignKey(ModificationReaction, blank=True, null=True, on_delete=SET_NULL, related_name='reactions', verbose_name='Modification')
+	modification = ForeignKey(ModificationReactant, blank=True, null=True, on_delete=SET_NULL, related_name='reactions', verbose_name='Modification')
 	enzyme = ForeignKey(EnzymeParticipant, blank=True, null=True, on_delete=SET_NULL, related_name='reactions', verbose_name='Enzyme')
 	coenzymes = ManyToManyField(CoenzymeParticipant, blank=True, null=True, related_name='reactions', verbose_name='Coenzymes')
 	is_spontaneous = BooleanField(verbose_name='Is spontaneous (pH 7.5, 25C, <i>I</i> = 0)')
@@ -2927,6 +3382,46 @@ class Reaction(SpeciesComponent):
 	map_coordinates = ManyToManyField(ReactionMapCoordinate, blank=True, null=True, related_name='reactions', verbose_name='Map coordinates')
 
 	#getters
+	
+	#plain tex formatting
+	def get_as_text_stoichiometry(self, is_user_anonymous):
+		compartments = []
+		for s in self.stoichiometry.all():
+			compartments.append(s.compartment)
+		compartments = list(set(compartments))
+			
+		pos = []
+		neg = []
+		for s in self.stoichiometry.all():
+			if s.coefficient < 0:
+				tmp = ''
+				if s.coefficient != -1:
+					tmp += '(%d) ' % -s.coefficient
+				tmp += s.molecule.wid
+				if len(compartments) > 1:
+					tmp += '[%s]' % (s.compartment.wid)
+				pos.append(tmp)
+			else:
+				tmp = ''
+				if s.coefficient != 1:
+					tmp += '(%d) ' % s.coefficient
+				tmp += s.molecule.wid
+				if len(compartments) > 1:
+					tmp += s.compartment.wid
+				neg.append(tmp)
+					
+		result = ''
+		if len(compartments) == 1:
+			result += '[%s]: ' % (compartments[0].wid)
+		result += ' + '.join(pos)
+		if self.direction == 'f':
+			result += ' ==> '
+		elif self.direction == 'b':
+			result += ' <== '
+		elif self.direction == 'r':
+			result += ' <==> '
+		result += ' + '.join(neg)
+		return format_with_evidence(obj = self.stoichiometry.all(), txt = result)		
 			
 	#html formatting
 	def get_as_html_stoichiometry(self, is_user_anonymous):
@@ -3136,7 +3631,7 @@ class Reaction(SpeciesComponent):
 				else:
 					molecule_type = molecule['model_type']
 				molecule_len = None
-				if molecule_type == 'Gene':
+				if molecule_type == 'Rna':
 					if isinstance(molecule, Entry):
 						molecule_len = molecule.length
 					else:
@@ -3155,7 +3650,7 @@ class Reaction(SpeciesComponent):
 					else:
 						molecule_len = gene['length'] / 3
 				
-				if mod['position'] is not None and not issubclass(getModel(molecule_type), (ProteinMonomer, Gene, )):
+				if mod['position'] is not None and not issubclass(getModel(molecule_type), (ProteinMonomer, Rna, )):
 					raise ValidationError({'modification': 'Position must be null'})
 				
 				if mod['position'] is not None and mod['position'] > molecule_len:
@@ -3475,31 +3970,29 @@ class TranscriptionUnit(Molecule):
 	parent_ptr_molecule = OneToOneField(Molecule, related_name='child_ptr_transcription_unit', parent_link=True, verbose_name='Molecule')
 	
 	#additional fields
+	chromosome = ForeignKey(Chromosome, related_name='transcription_units', verbose_name='Chromosome')
 	genes = ManyToManyField('Gene', related_name='transcription_units', verbose_name='Genes')
-	promoter_35_coordinate = IntegerField(null=True, blank=True, verbose_name='Promoter -35 box coordinate (nt)')
-	promoter_35_length = IntegerField(null=True, blank=True, verbose_name='Promoter -35 box length (nt)')
-	promoter_10_coordinate = IntegerField(null=True, blank=True, verbose_name='Promoter -10 box coordinate (nt)')
-	promoter_10_length = IntegerField(null=True, blank=True, verbose_name='Promoter -10 box length (nt)')
-	tss_coordinate = IntegerField(null=True, blank=True, verbose_name='Transcription start site coordinate (nt)')
+	promoter_35_coordinate = IntegerField(null=True, blank=True, verbose_name='Promoter -35 region coordinate (nt)')
+	promoter_35_length = IntegerField(null=True, blank=True, verbose_name='Promoter -35 region length (nt)')
+	pribnow_box_coordinate = IntegerField(null=True, blank=True, verbose_name='Pribnow box coordinate (nt)')
+	pribnow_box_length = IntegerField(null=True, blank=True, verbose_name='Pribnow box length (nt)')
+	coordinate = IntegerField(null=True, blank=True, verbose_name='Coordinate (nt)')
+	length = PositiveIntegerField(verbose_name='Length (nt)')
+	direction = CharField(max_length=10, choices=CHOICES_DIRECTION, verbose_name='Direction')
+	transcription_rate = ForeignKey(EntryPositiveFloatData, null=True, blank=True, on_delete=SET_NULL, related_name='transcription_units', verbose_name='Transcription rate')
 	
 	#getters
 	def get_chromosome(self):
-		chr = list(set([g.chromosome for g in self.genes.all()]))
-		if len(chr) != 1:
-			raise		
-		return chr[0]
+		return self.chromosome
 		
 	def get_coordinate(self):
-		return self.genes.all().aggregate(Min('coordinate'))['coordinate__min']
+		return self.coordinate
 		
 	def get_length(self):
-		return self.genes.extra(select={"end_coordinate": "MAX(coordinate + length - 1)"}).values('end_coordinate')[0]['end_coordinate'] - self.get_coordinate() + 1
+		return self.length
 		
 	def get_direction(self):
-		dir = list(set([g[0] for g in self.genes.values_list('direction').all()]))
-		if len(dir) != 1:
-			raise		
-		return dir[0]
+		return self.direction
 		
 	def get_sequence(self):
 		seq = self.get_chromosome().sequence[self.get_coordinate() - 1:self.get_coordinate() - 1 + self.get_length()]
@@ -3510,6 +4003,14 @@ class TranscriptionUnit(Molecule):
 	def get_gc_content(self):
 		seq = self.get_sequence()
 		return float(seq.count('G') + seq.count('C')) / float(len(seq))
+		
+	def get_pseudogenes(self):
+		genes = []
+		for gene in self.chromosome.genes.all():
+			if (gene.coordinate < self.coordinate and gene.coordinate + gene.length - 1 >= self.coordinate) or \
+			   (gene.coordinate <= self.coordinate + self.length - 1 and gene.coordinate + gene.length -1 > self.coordinate + self.length - 1):
+			   genes.append(gene)
+		return genes
 		
 	#html formatting
 	def get_as_html_structure(self, is_user_anonymous):
@@ -3522,6 +4023,12 @@ class TranscriptionUnit(Molecule):
 	def get_as_html_genes(self, is_user_anonymous):
 		results = []
 		for g in self.genes.all():
+			results.append('<a href="%s">%s</a>' % (g.get_absolute_url(), g.wid, ))
+		return format_list_html(results, comma_separated=True)
+		
+	def get_as_html_pseudogenes(self, is_user_anonymous):
+		results = []
+		for g in self.get_pseudogenes():
 			results.append('<a href="%s">%s</a>' % (g.get_absolute_url(), g.wid, ))
 		return format_list_html(results, comma_separated=True)
 		
@@ -3540,6 +4047,12 @@ class TranscriptionUnit(Molecule):
 		for r in self.transcriptional_regulations.all():
 			results.append('<a href="%s">%s</a>: <a href="%s">%s</a>' % (r.get_absolute_url(), r.wid, r.transcription_factor.get_absolute_url(), r.transcription_factor.wid))
 		return format_list_html(results)
+		
+	def get_as_html_transcription_rate(self, is_user_anonymous):
+		r = self.transcription_rate
+		if r is None:
+			return
+		return format_with_evidence(list_item = True, obj = r, txt = '%.3f %s' % (r.value, r.units))
 
 	#meta information
 	class Meta:
@@ -3550,15 +4063,20 @@ class TranscriptionUnit(Molecule):
 			('Classification', {'fields': ['type']}),
 			('Structure (Hayflick media, 37C)', {'fields': [
 				{'verbose_name': 'Structure', 'name': 'structure'},
+				'chromosome',
 				'genes', 
+				{'verbose_name': 'Pseudogenes', 'name': 'pseudogenes'},
 				'promoter_35_coordinate', 
 				'promoter_35_length', 
-				'promoter_10_coordinate', 
-				'promoter_10_length', 
-				'tss_coordinate', 
+				'pribnow_box_coordinate', 
+				'pribnow_box_length', 
+				'coordinate', 'length', 'direction',
 				{'verbose_name': 'Sequence', 'name': 'sequence'},
 				]}),	
-			('Regulation', {'fields': [{'verbose_name': 'Regulation', 'name': 'transcriptional_regulations'}]}),
+			('Expression', {'fields': [
+				'transcription_rate',
+				{'verbose_name': 'Regulation', 'name': 'transcriptional_regulations'},
+				]}),
 			('Function', {'fields': [
 				{'verbose_name': 'Reaction participant', 'name':'reaction_stoichiometry_participants'},
 				{'verbose_name': 'Complex subunit', 'name':'protein_complex_biosythesis_participants'},
@@ -3570,7 +4088,9 @@ class TranscriptionUnit(Molecule):
 		field_list = [
 			'id', 'wid', 'name', 'synonyms', 'cross_references',
 			'type', 
-			'genes', 'promoter_35_coordinate', 'promoter_35_length', 'promoter_10_coordinate', 'promoter_10_length', 'tss_coordinate',	
+			'chromosome', 'genes', 'promoter_35_coordinate', 'promoter_35_length', 'pribnow_box_coordinate', 'pribnow_box_length', 
+			'coordinate', 'length', 'direction',
+			'transcription_rate', 
 			'comments',
 			'references', 
 			'created_user', 'created_date', 'last_updated_user', 'last_updated_date', 
@@ -3583,7 +4103,8 @@ class TranscriptionUnit(Molecule):
 			if len(obj_data['genes']) == 1:
 				return
 			if len(obj_data['genes']) == 0:
-				raise ValidationError({'genes': 'Transcription units most contain at least 1 gene'})
+				#raise ValidationError({'genes': 'Transcription units most contain at least 1 gene'})
+				return
 				
 			chr_wids = []
 			if all_obj_data is None:
@@ -3608,7 +4129,7 @@ class TranscriptionalRegulation(SpeciesComponent):
 	transcription_factor = ForeignKey('Protein', related_name='transcriptional_regulations',  verbose_name='Transcripton factor')
 	binding_site = ForeignKey(BindingSite, null=True, blank=True, on_delete=SET_NULL, related_name='transcriptional_regulations', verbose_name='Binding site')
 	affinity = ForeignKey(EntryPositiveFloatData, null=True, blank=True, on_delete=SET_NULL, verbose_name='Affinity', related_name='+')
-	activity = ForeignKey(EntryPositiveFloatData, verbose_name='Fold-change activity', related_name='+')
+	activity = ForeignKey(EntryPositiveFloatData, null=True, blank=True, verbose_name='Fold-change activity', related_name='+')
 	
 	#getters
 	def get_binding_site_sequence(self):
@@ -3728,12 +4249,17 @@ class Type(SpeciesComponent):
 
 	#getters
 	def get_all_members(self):
-		members = []
-		for m in self.members.all():
-			members.append(m)
+		members = self.members.all()
 		for c in self.children.all():
-			members += c.get_all_members()
-		return members		
+			members = members | c.get_all_members()
+		return members
+		
+	def get_all_parents(self):
+		parents = []
+		if self.parent is not None:
+			parents.append(self.parent)
+			parents += self.parent.get_all_parents()
+		return parents		
 	
 	#html formatting	
 	def get_as_html_parent(self, is_user_anonymous):
@@ -3752,9 +4278,9 @@ class Type(SpeciesComponent):
 	def get_as_html_members(self, is_user_anonymous):
 		results = []
 		for m in self.get_all_members():
-			results.append('<a href="%s">%s</a>' % (m.get_absolute_url(), m.wid))		
+			results.append('<a href="%s">%s</a>' % (m.get_absolute_url(), m.wid))
 		return format_list_html(results, comma_separated=True)
-	
+		
 	#meta information
 	class Meta:
 		concrete_entry_model = True
@@ -3762,7 +4288,10 @@ class Type(SpeciesComponent):
 			('Type', {'fields': ['model_type']}),
 			('Name', {'fields': ['wid', 'name', 'synonyms', 'cross_references']}), 
 			('Classification', {'fields': ['type', 'parent', 'children', 'members']}),
-			('Comments', {'fields': ['comments', 'references']}),
+			('Comments', {'fields': [
+				'comments', 
+				'references'
+				]}),
 			('Metadata', {'fields': [{'verbose_name': 'Created', 'name': 'created_user'}, {'verbose_name': 'Last updated', 'name': 'last_updated_user'}]}),
 			]
 		field_list = [
