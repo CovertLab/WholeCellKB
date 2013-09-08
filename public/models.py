@@ -1739,7 +1739,7 @@ class Gene(Molecule):
 		seq = self.get_sequence()
 		return \
 			+ Metabolite.objects.get(species__id=self.species.id, wid='AMP').get_empirical_formula() * seq.count('A') \
-			+ Metabolite.objects.get(species__id=self.species.id, wid='GMP').get_empirical_formula() * seq.count('C') \
+			+ Metabolite.objects.get(species__id=self.species.id, wid='CMP').get_empirical_formula() * seq.count('C') \
 			+ Metabolite.objects.get(species__id=self.species.id, wid='GMP').get_empirical_formula() * seq.count('G') \
 			+ Metabolite.objects.get(species__id=self.species.id, wid='UMP').get_empirical_formula() * seq.count('T') \
 			- EmpiricalFormula(H=1, O=1) * (len(seq)-1)		
