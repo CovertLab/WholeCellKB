@@ -433,7 +433,7 @@ def render_queryset_to_response(request = [], queryset = EmptyQuerySet(), models
 		response['Content-Disposition'] = "attachment; filename=data.bib"
 	elif format == 'json':
 		objects = []
-		for obj in queryset.iterator():
+		for obj in queryset:
 			objDict = convert_modelobject_to_stdobject(obj, request.user.is_anonymous())
 			objDict['model'] = obj.__class__.__name__
 			objects.append(objDict)
