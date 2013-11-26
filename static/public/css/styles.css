@@ -100,7 +100,7 @@ select.select{
 	top:0px;
 	right:0px;
 	height: 65px;
-	overflow: hidden;
+	overflow: visible;
 	margin: 0px 0px 0px 0px;	
 	border-top:none;
 	border-right:none;
