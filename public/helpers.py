@@ -17,6 +17,7 @@ from django.core.urlresolvers import reverse
 from django.db import IntegrityError
 from django.db.models import get_app, get_models, get_model
 from django.db.models.fields import AutoField, BigIntegerField, IntegerField, PositiveIntegerField, PositiveSmallIntegerField, SmallIntegerField, BooleanField, NullBooleanField, DecimalField, FloatField, CharField, CommaSeparatedIntegerField, EmailField, FilePathField, GenericIPAddressField, IPAddressField, SlugField, URLField, TextField, DateField, DateTimeField, TimeField, NOT_PROVIDED
+from django.db.models.fields import FieldDoesNotExist
 from django.db.models.fields.related import OneToOneField, RelatedObject, ManyToManyField, ForeignKey
 from django.db.models.query import EmptyQuerySet
 from django.http import Http404, HttpResponse, HttpResponseBadRequest
@@ -26,6 +27,7 @@ from django.template.loader import get_template
 from django.utils import simplejson
 from django.utils.html import strip_tags
 from django.utils.text import capfirst
+from interruptingcow import timeout
 from odict import odict
 from openpyxl import Workbook, load_workbook
 from openpyxl.cell import Cell, get_column_letter
@@ -397,6 +399,7 @@ From http://www.peterbe.com/plog/uniqifiers-benchmark
 def uniqueSorted(seq):
 	return {}.fromkeys(seq).keys()
 
+@timeout(4 * 60, exception=RuntimeError)
 def render_queryset_to_response(request = [], queryset = EmptyQuerySet(), models = [], templateFile = '', data = {}, species_wid=None):	
 	format = request.GET.get('format', 'html')
 	
@@ -404,7 +407,7 @@ def render_queryset_to_response(request = [], queryset = EmptyQuerySet(), models
 		species = Species.objects.get(wid=species_wid)
 	else:
 		species = Species.objects.all()
-		if len(species) > 0:
+		if species.count() > 0:
 			species = species[0]
 		else:
 			species = None
@@ -434,7 +437,7 @@ def render_queryset_to_response(request = [], queryset = EmptyQuerySet(), models
 		response['Content-Disposition'] = "attachment; filename=data.bib"
 	elif format == 'json':
 		objects = []
-		for obj in queryset.iterator():
+		for obj in queryset:
 			objDict = convert_modelobject_to_stdobject(obj, request.user.is_anonymous())
 			objDict['model'] = obj.__class__.__name__
 			objects.append(objDict)
@@ -1357,7 +1360,7 @@ def format_field_detail_view(obj, field_name, is_user_anonymous):
 def format_field_detail_view_helper():
 	pass
 
-def convert_modelobject_to_stdobject(obj, is_user_anonymous=False, ancestors = []):
+def convert_modelobject_to_stdobject(obj, is_user_anonymous=False, ancestors = [], include_related_fields = False):
 	model = obj.__class__
 	
 	if issubclass(model, Entry) and len(ancestors) > 0:
@@ -1366,6 +1369,10 @@ def convert_modelobject_to_stdobject(obj, is_user_anonymous=False, ancestors = [
 	objDict = {}
 	if issubclass(model, Entry):
 		fields = getModelDataFields(model, metadata=not is_user_anonymous)
+		try:
+			fields.append(model._meta.get_field_by_name('species')[0])
+		except FieldDoesNotExist:
+			pass
 	else:
 		fields = model._meta.fields + model._meta.many_to_many
 		
@@ -1407,14 +1414,15 @@ def convert_modelobject_to_stdobject(obj, is_user_anonymous=False, ancestors = [
 			
 		objDict[field.name] = stdobj_val
 	
-	for field in model._meta.get_all_related_objects() + model._meta.get_all_related_many_to_many_objects():
-		if field.get_accessor_name() == '+':
-			continue
-			
-		objDict[field.get_accessor_name()] = []
-		for model_subval in getattr(obj, field.get_accessor_name()).all():
-			if model_subval not in ancestors:
-				objDict[field.get_accessor_name()].append(convert_modelobject_to_stdobject(model_subval, is_user_anonymous, ancestors + [obj]))
+	if include_related_fields:
+		for field in model._meta.get_all_related_objects() + model._meta.get_all_related_many_to_many_objects():
+			if field.get_accessor_name() == '+':
+				continue
+				
+			objDict[field.get_accessor_name()] = []
+			for model_subval in getattr(obj, field.get_accessor_name()).all():
+				if model_subval not in ancestors:
+					objDict[field.get_accessor_name()].append(convert_modelobject_to_stdobject(model_subval, is_user_anonymous, ancestors + [obj]))
 		
 	return objDict
 	
