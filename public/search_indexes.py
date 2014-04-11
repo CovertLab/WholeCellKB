@@ -63,19 +63,23 @@ def format_field_for_indexing(field=None, related=None, depth=0):
 		field_name = field.name
 		if field.rel is not None:
 			field_model = field.rel.to
-	
-	if field_name in ['created_user', 'created_date', 'last_updated_user', 'last_updated_date']:
+			
+	if field_name in ['id', 'created_user', 'created_date', 'last_updated_user', 'last_updated_date']:
 		return ''
 		
 	if isinstance(field, ManyToManyField) or related is not None:
-		if (depth <= 0) or (not issubclass(field_model, Entry)):
+		if issubclass(field_model, Entry):			
+			return ''
+		else:
 			result  = '\t'*depth + '{%% for %s in %s.%s.all %%}\n' % (name_child, name_obj, field_name, )
 			for subfield in field_model._meta.fields + field_model._meta.many_to_many:
 				result += format_field_for_indexing(field=subfield, depth=depth+1)
 			result += '\t'*depth + '{% endfor %}\n'
 			return result
 	elif isinstance(field, ForeignKey):
-		if (depth <= 0) or (not issubclass(field_model, Entry)):
+		if issubclass(field_model, Entry):
+			return ''
+		else:
 			result  = '\t'*depth + '{%% with %s=%s.%s %%}\n' % (name_child, name_obj, field_name, )
 			for subfield in field_model._meta.fields + field_model._meta.many_to_many:
 				result += format_field_for_indexing(field=subfield, depth=depth+1)
