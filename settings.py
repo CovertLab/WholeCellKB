@@ -28,7 +28,7 @@ DATABASES = {
         'NAME': 'wholecellkbmpn',
         'USER': 'wholecellkb',
         'PASSWORD': 'wholecellkb',
-        'HOST': 'covertlab.stanford.edu',
+        'HOST': 'localhost',
         'PORT': '',
     }
 }
