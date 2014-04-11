@@ -13,7 +13,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.core.urlresolvers import reverse
-from django.db.models import Count, Sum, Avg
+from django.db.models import Count, Sum, Avg, Q
 from django.db.models.fields import BooleanField, NullBooleanField, AutoField, BigIntegerField, DecimalField, FloatField, IntegerField, PositiveIntegerField, PositiveSmallIntegerField, SmallIntegerField
 from django.db.models.fields.related import OneToOneField, RelatedObject, ManyToManyField, ForeignKey
 from django.db.models.query import EmptyQuerySet
@@ -82,8 +82,15 @@ def index(request, species_wid=None):
 			[0, 'Genes', models.Gene.objects.filter(species__id = species.id).count(), None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'Gene'})],
 			[1, 'mRNA', models.Gene.objects.filter(species__id = species.id, type__wid='mRNA').count(), None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'Gene'}) + '?type=mRNA'],
 			[1, 'rRNA', models.Gene.objects.filter(species__id = species.id, type__wid='rRNA').count(), None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'Gene'}) + '?type=rRNA'],
-			[1, 'sRNA', models.Gene.objects.filter(species__id = species.id, type__wid='sRNA').count(), None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'Gene'}) + '?type=sRNA'],
-			[1, 'tRNA', models.Gene.objects.filter(species__id = species.id, type__wid='tRNA').count(), None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'Gene'}) + '?type=tRNA'],
+			[1, 'sRNA', 
+				+ models.Gene.objects.filter(species__id = species.id, type__wid='asRNA').count()
+				+ models.Gene.objects.filter(species__id = species.id, type__wid='sRNA').count()
+				+ models.Gene.objects.filter(species__id = species.id, type__wid='functional_sRNA').count()
+				, None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'Gene'}) + '?type=sRNA'],
+			[1, 'tRNA', 
+				+ models.Gene.objects.filter(species__id = species.id, type__wid='tRNA').count()
+				+ models.Gene.objects.filter(species__id = species.id, type__wid='initiator_tRNA').count()
+				, None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'Gene'}) + '?type=tRNA'],
 		])
 		
 		content.append([
@@ -156,30 +163,30 @@ def index(request, species_wid=None):
 		rxns = models.Reaction.objects.filter(species__id = species.id)
 		content.append([
 			[0, 'Reactions', rxns.count(), None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'Reaction'})],
-			[1, 'DNA damage', rxns.filter(processes__wid='Process_DNADamage').count(), None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'Reaction'}) + '?processes=Process_DNADamage'],
-			[1, 'DNA repair', rxns.filter(processes__wid='Process_DNARepair').count(), None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'Reaction'}) + '?processes=Process_DNARepair'],
-			[1, 'Metabolic', rxns.filter(processes__wid='Process_Metabolism').count(), None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'Reaction'}) + '?processes=Process_Metabolism'],			
-			[1, 'Protein decay', rxns.filter(processes__wid='Process_ProteinDecay').count(), None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'Reaction'}) + '?processes=Process_ProteinDecay'],
-			[1, 'Protein modification', rxns.filter(processes__wid='Process_ProteinModification').count(), None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'Reaction'}) + '?processes=Process_ProteinModification'],			
-			[1, 'Replication Initiation', rxns.filter(processes__wid='Process_ReplicationInitiation').count(), None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'Reaction'}) + '?processes=Process_ReplicationInitiation'],
-			[1, 'RNA decay', rxns.filter(processes__wid='Process_RNADecay').count(), None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'Reaction'}) + '?processes=Process_RNADecay'],
-			[1, 'RNA modification', rxns.filter(processes__wid='Process_RNAModification').count(), None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'Reaction'}) + '?processes=Process_RNAModification'],			
-			[1, 'RNA processing', rxns.filter(processes__wid='Process_RNAProcessing').count(), None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'Reaction'}) + '?processes=Process_RNAProcessing'],			
-			[1, 'Transcription', rxns.filter(processes__wid='Process_Transcription').count(), None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'Reaction'}) + '?processes=Process_Transcription'],			
-			[1, 'Translation', rxns.filter(processes__wid='Process_Translation').count(), None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'Reaction'}) + '?processes=Process_Translation'],			
-			[1, 'tRNA aminoacylation', rxns.filter(processes__wid='Process_tRNAAminoacylation').count(), None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'Reaction'}) + '?processes=Process_tRNAAminoacylation'],
-			[1, 'Other', rxns.exclude(processes__wid='Process_DNADamage')
-				.exclude(processes__wid='Process_DNARepair')
-				.exclude(processes__wid='Process_Metabolism')
-				.exclude(processes__wid='Process_ProteinDecay')
-				.exclude(processes__wid='Process_ProteinModification')
-				.exclude(processes__wid='Process_ReplicationInitiation')				
-				.exclude(processes__wid='Process_RNADecay')
-				.exclude(processes__wid='Process_RNAModification')
-				.exclude(processes__wid='Process_RNAProcessing')
-				.exclude(processes__wid='Process_Transcription')
-				.exclude(processes__wid='Process_Translation')
-				.exclude(processes__wid='Process_tRNAAminoacylation')
+			[1, 'DNA damage', rxns.filter(process__wid='Process_DNADamage').count(), None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'Reaction'}) + '?process=Process_DNADamage'],
+			[1, 'DNA repair', rxns.filter(process__wid='Process_DNARepair').count(), None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'Reaction'}) + '?process=Process_DNARepair'],
+			[1, 'Metabolic', rxns.filter(process__wid='Process_Metabolism').count(), None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'Reaction'}) + '?process=Process_Metabolism'],			
+			[1, 'Protein decay', rxns.filter(process__wid='Process_ProteinDecay').count(), None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'Reaction'}) + '?process=Process_ProteinDecay'],
+			[1, 'Protein modification', rxns.filter(process__wid='Process_ProteinModification').count(), None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'Reaction'}) + '?process=Process_ProteinModification'],			
+			[1, 'Replication Initiation', rxns.filter(process__wid='Process_ReplicationInitiation').count(), None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'Reaction'}) + '?process=Process_ReplicationInitiation'],
+			[1, 'RNA decay', rxns.filter(process__wid='Process_RNADecay').count(), None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'Reaction'}) + '?process=Process_RNADecay'],
+			[1, 'RNA modification', rxns.filter(process__wid='Process_RNAModification').count(), None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'Reaction'}) + '?process=Process_RNAModification'],			
+			[1, 'RNA processing', rxns.filter(process__wid='Process_RNAProcessing').count(), None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'Reaction'}) + '?process=Process_RNAProcessing'],			
+			[1, 'Transcription', rxns.filter(process__wid='Process_Transcription').count(), None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'Reaction'}) + '?process=Process_Transcription'],			
+			[1, 'Translation', rxns.filter(process__wid='Process_Translation').count(), None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'Reaction'}) + '?process=Process_Translation'],			
+			[1, 'tRNA aminoacylation', rxns.filter(process__wid='Process_tRNAAminoacylation').count(), None, reverse('public.views.list', kwargs={'species_wid': species.wid, 'model_type': 'Reaction'}) + '?process=Process_tRNAAminoacylation'],
+			[1, 'Other', rxns.exclude(process__wid='Process_DNADamage')
+				.exclude(process__wid='Process_DNARepair')
+				.exclude(process__wid='Process_Metabolism')
+				.exclude(process__wid='Process_ProteinDecay')
+				.exclude(process__wid='Process_ProteinModification')
+				.exclude(process__wid='Process_ReplicationInitiation')				
+				.exclude(process__wid='Process_RNADecay')
+				.exclude(process__wid='Process_RNAModification')
+				.exclude(process__wid='Process_RNAProcessing')
+				.exclude(process__wid='Process_Transcription')
+				.exclude(process__wid='Process_Translation')
+				.exclude(process__wid='Process_tRNAAminoacylation')
 				.count()],
 		])		
 		
@@ -315,6 +322,7 @@ def index(request, species_wid=None):
 	return render_queryset_to_response(
 		request = request, 
 		species_wid = species_wid,
+		queryset = models.Species.objects.filter(wid=species_wid),
 		data = {
 			'content': [contentCol1, contentCol2, contentCol3],
 			'contentRows': range(max(len(contentCol1), len(contentCol2), len(contentCol3))),
@@ -438,6 +446,28 @@ def list(request, species_wid, model_type):
 	model = getModel(model_type)
 	objects = model.objects.all().filter(species__id=species.id)
 	
+	if request.GET.get('format', 'html') is 'html':
+		facet_fields = list_facets(species, model_type, model)
+	else:
+		facet_fields = []
+		objects = objects.select_related().prefetch_related()
+	
+	objects = list_filter(request, objects, model, model_type)
+					
+	return render_queryset_to_response(
+		species_wid = species_wid,
+		request = request, 
+		models = [model], 
+		queryset = objects, 
+		templateFile = 'public/list.html', 
+		data = {
+			'model_type': model_type,
+			'model_verbose_name': model._meta.verbose_name,
+			'model_verbose_name_plural': model._meta.verbose_name_plural,
+			'facet_fields': facet_fields,
+			})
+			
+def list_facets(species, model_type, model):
 	facet_fields = []	
 	for field_full_name in model._meta.facet_fields:
 		#facet
@@ -514,35 +544,56 @@ def list(request, species_wid, model_type):
 				'verbose_name': field_verbose_name, 
 				'facets': facets,
 				})
-	
-		#filter
-		val = request.GET.get(field_full_name)		
-		if val:
-			if isinstance(field, (ForeignKey, ManyToManyField)):
-				kwargs = {field_full_name + '__wid': val}
-			elif isinstance(field, (BooleanField, NullBooleanField)):
-				kwargs = {field_full_name: val == 'True'}
-			elif isinstance(field, (AutoField, BigIntegerField, DecimalField, FloatField, IntegerField, PositiveIntegerField, PositiveSmallIntegerField, SmallIntegerField)):
-				kwargs = {field_full_name: float(val)}
-			else:
-				kwargs = {field_full_name: val}				
-			objects = objects.filter(**kwargs)
-			
-			if isinstance(field, (ForeignKey, ManyToManyField)) and issubclass(field.rel.to, Type):
-				objects = Type.objects.get(wid=val).get_all_members().filter(model_type=model_type).order_by('wid')
+				
+	return facet_fields
 
-	return render_queryset_to_response(
-		species_wid = species_wid,
-		request = request, 
-		models = [model], 
-		queryset = objects, 
-		templateFile = 'public/list.html', 
-		data = {
-			'model_type': model_type,
-			'model_verbose_name': model._meta.verbose_name,
-			'model_verbose_name_plural': model._meta.verbose_name_plural,
-			'facet_fields': facet_fields,
-			})
+def list_filter(request, objects, model, model_type):
+	for field_full_name in model._meta.facet_fields:
+		field_names = str(field_full_name).split('__')
+		tmp_model = model
+		field_verbose_name = []
+		for field_name in field_names:
+			field = tmp_model._meta.get_field_by_name(field_name)[0]
+			field_verbose_name.append(field.verbose_name)
+			if isinstance(field, (ForeignKey, ManyToManyField)):
+				tmp_model = field.rel.to
+		field_verbose_name = ' &#8250; '.join(field_verbose_name)
+		
+		if isinstance(field, (ForeignKey, ManyToManyField)) and not issubclass(field.rel.to, Entry):
+			continue
+			
+		if not request.GET.__contains__(field_full_name):
+			continue
+			
+		#filter
+		vals = request.GET.getlist(field_full_name)
+		if isinstance(field, (ForeignKey, ManyToManyField)) and issubclass(field.rel.to, Type):
+			includesNoneType = False
+			for val in vals:
+				includesNoneType = includesNoneType or (not val)
+			
+			types = Type.objects.filter(wid__in=vals)
+			
+			type_descendants = []
+			for type in types:
+				type_descendants = type_descendants + type.get_all_descendants()
+			
+			if includesNoneType:
+				objects = objects.filter(Q(type__in=type_descendants) | Q(type__isnull=True))
+			else:
+				objects = objects.filter(type__in=type_descendants)
+		else:
+			if isinstance(field, (ForeignKey, ManyToManyField)):
+				kwargs = {field_full_name + '__wid__in': vals}
+			elif isinstance(field, (BooleanField, NullBooleanField)):
+				kwargs = {field_full_name + '__in': map(lambda val: val == 'True', vals)}
+			elif isinstance(field, (AutoField, BigIntegerField, DecimalField, FloatField, IntegerField, PositiveIntegerField, PositiveSmallIntegerField, SmallIntegerField)):
+				kwargs = {field_full_name + '__in': map(float, vals)}
+			else:
+				kwargs = {field_full_name + '__in': vals}
+			objects = objects.filter(**kwargs)
+	
+	return objects
 	
 def list_parameters(request, species_wid, type = None):
 	species = Species.objects.get(wid=species_wid)

@@ -46,7 +46,11 @@ CHOICES_STRANDEDNESS = (
 
 CHOICES_VMAX_UNITS = (
 	('1/min', '1/min'),
-	('U/mg', 'U/mg'),
+	('U/mg', 'U/mg'),	
+	('1/nt/s', '1/nt/s'),
+	('1/nt/Gy', '1/nt/Gy'),
+	('1/(J/m^2*nt)', '1/(J/m^2*nt)'),
+	('dimensionless', 'dimensionless'),
 )
 
 CHOICES_HOMOLOG_SPECIES = (
@@ -820,7 +824,7 @@ class Entry(Model):
 		if is_user_anonymous:
 			return '%s' % (self.last_updated_date.strftime("%Y-%m-%d %H:%M:%S"))
 		else:
-			return '<a href="%s">%s %s</a> on %s' % (self.last_updated_user.get_absolute_url(), self.last_updated_user.first_name, self.last_updated_user.last_name, self.last_updated_date.strftime("%Y-%m-%d %H:%M:%S"))		
+			return '<a href="%s">%s %s</a> on %s' % (self.last_updated_user.get_absolute_url(), self.last_updated_user.first_name, self.last_updated_user.last_name, self.last_updated_date.strftime("%Y-%m-%d %H:%M:%S"))
 	
 	#meta information
 	class Meta:
@@ -2586,7 +2590,7 @@ class ProteinComplex(Protein):
 			hl = None
 			if isinstance(molecule, ProteinComplex):
 				hl = molecule.get_half_life()
-			elif isinstance(molecule, (ProteinMonomer, Rna)):
+			elif isinstance(molecule, (ProteinMonomer, Rna)) and molecule.half_life is not None:
 				hl = molecule.half_life.value
 				
 			if hl is not None:
@@ -3377,8 +3381,8 @@ class Reaction(SpeciesComponent):
 	optimal_ph = ForeignKey(EntryPositiveFloatData, blank=True, null=True, on_delete=SET_NULL, verbose_name='Optimal pH', related_name='+')
 	optimal_temperature = ForeignKey(EntryFloatData, blank=True, null=True, on_delete=SET_NULL, verbose_name='Optimal temperature', related_name='+')		
 	pathways = ManyToManyField('Pathway', blank=True, null=True, related_name='reactions', verbose_name='Pathways')
-	processes = ForeignKey('Process', blank=True, null=True, on_delete=SET_NULL, related_name='reactions', verbose_name='Process')
-	states = ForeignKey('State', blank=True, null=True, on_delete=SET_NULL, related_name='reactions', verbose_name='State')
+	process = ForeignKey('Process', blank=True, null=True, on_delete=SET_NULL, related_name='reactions', verbose_name='Process')
+	state = ForeignKey('State', blank=True, null=True, on_delete=SET_NULL, related_name='reactions', verbose_name='State')
 	map_coordinates = ManyToManyField(ReactionMapCoordinate, blank=True, null=True, related_name='reactions', verbose_name='Map coordinates')
 
 	#getters
@@ -3558,7 +3562,7 @@ class Reaction(SpeciesComponent):
 			('Energetics', {'fields': ['is_spontaneous', 'delta_g', 'keq']}), 
 			('Kinetics', {'fields': ['kinetics_forward', 'kinetics_backward']}), 
 			('Parameters', {'fields': ['parameters']}),
-			('Associations', {'fields': ['pathways', 'processes', 'states']}),
+			('Associations', {'fields': ['pathways', 'process', 'state']}),
 			('Comments', {'fields': ['comments', 'references']}),
 			('Metadata', {'fields': [{'verbose_name': 'Created', 'name': 'created_user'}, {'verbose_name': 'Last updated', 'name': 'last_updated_user'}]}),
 			]
@@ -3569,13 +3573,13 @@ class Reaction(SpeciesComponent):
 			'enzyme', 'coenzymes', 'optimal_ph', 'optimal_temperature', 
 			'is_spontaneous', 'delta_g', 'keq', 
 			'kinetics_forward', 'kinetics_backward',
-			'pathways', 'processes', 'states',
+			'pathways', 'process', 'state',
 			'map_coordinates',
 			'comments',
 			'references', 
 			'created_user', 'created_date', 'last_updated_user', 'last_updated_date', 
 			]
-		facet_fields = ['type', 'direction', 'enzyme__protein', 'coenzymes__metabolite', 'is_spontaneous', 'pathways', 'processes', 'states']
+		facet_fields = ['type', 'direction', 'enzyme__protein', 'coenzymes__metabolite', 'is_spontaneous', 'pathways', 'process', 'state']
 		verbose_name='Reaction'
 		verbose_name_plural = 'Reactions'	
 
@@ -4248,6 +4252,12 @@ class Type(SpeciesComponent):
 	parent = ForeignKey('self', blank=True, null=True, on_delete=SET_NULL, related_name='children', verbose_name='Parent')
 
 	#getters
+	def get_all_descendants(self):
+		descendants = [self]
+		for c in self.children.all():
+			descendants = descendants + c.get_all_descendants()
+		return descendants
+	
 	def get_all_members(self):
 		members = self.members.all()
 		for c in self.children.all():
