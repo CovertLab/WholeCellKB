@@ -3137,6 +3137,7 @@ class Rna(Molecule):
 	coordinate = IntegerField(null=True, blank=True, verbose_name='Coordinate (nt)')
 	length = PositiveIntegerField(verbose_name='Length (nt)')
 	direction = CharField(max_length=10, choices=CHOICES_DIRECTION, verbose_name='Direction')	
+	copy_number = ForeignKey(EntryPositiveFloatData, null=True, blank=True, on_delete=SET_NULL, verbose_name='Copy number (rel)', related_name='+')	
 	half_life = ForeignKey(EntryPositiveFloatData, blank=True, null=True, on_delete=SET_NULL, verbose_name='Half life (min)', related_name='+')
 	
 	#getters
@@ -3213,13 +3214,19 @@ class Rna(Molecule):
 		return 'Chromosome: <a href="%s">%s</a>, Coordinate: %s, Length: %s, Direction: %s, Sequence: %s' % (
 			self.get_chromosome().get_absolute_url(), self.get_chromosome().wid, 
 			self.get_coordinate(), self.get_length(), direction, 
-			format_sequence_as_html(self.get_sequence()))		
+			format_sequence_as_html(self.get_sequence()))
+			
+	def get_as_html_copy_number(self, is_user_anonymous):
+		r = self.copy_number
+		if r is None:
+			return
+		return format_with_evidence(list_item = True, obj = r, txt = '%.3f %s' % (r.value, r.units))
 
 	def get_as_html_half_life(self, is_user_anonymous):
 		r = self.half_life
 		if r is None:
 			return
-		return format_with_evidence(list_item = True, obj = r, txt = '%.3f %s' % (r.value, r.units))		
+		return format_with_evidence(list_item = True, obj = r, txt = '%.3f %s' % (r.value, r.units))
 
 	#meta information
 	class Meta:
@@ -3237,6 +3244,7 @@ class Rna(Molecule):
 				{'verbose_name': 'Sequence', 'name': 'sequence'},
 				]}),	
 			('Expression', {'fields': [
+				'copy_number',
 				'half_life',
 				]}),
 			('Function', {'fields': [
@@ -3252,6 +3260,7 @@ class Rna(Molecule):
 			'type', 
 			'chromosome', 'transcription_units', 'genes',
 			'coordinate', 'length', 'direction',
+			'copy_number',
 			'half_life',
 			'comments',
 			'references', 
@@ -3983,7 +3992,6 @@ class TranscriptionUnit(Molecule):
 	coordinate = IntegerField(null=True, blank=True, verbose_name='Coordinate (nt)')
 	length = PositiveIntegerField(verbose_name='Length (nt)')
 	direction = CharField(max_length=10, choices=CHOICES_DIRECTION, verbose_name='Direction')
-	transcription_rate = ForeignKey(EntryPositiveFloatData, null=True, blank=True, on_delete=SET_NULL, related_name='transcription_units', verbose_name='Transcription rate')
 	
 	#getters
 	def get_chromosome(self):
@@ -4050,13 +4058,7 @@ class TranscriptionUnit(Molecule):
 		results = []
 		for r in self.transcriptional_regulations.all():
 			results.append('<a href="%s">%s</a>: <a href="%s">%s</a>' % (r.get_absolute_url(), r.wid, r.transcription_factor.get_absolute_url(), r.transcription_factor.wid))
-		return format_list_html(results)
-		
-	def get_as_html_transcription_rate(self, is_user_anonymous):
-		r = self.transcription_rate
-		if r is None:
-			return
-		return format_with_evidence(list_item = True, obj = r, txt = '%.3f %s' % (r.value, r.units))
+		return format_list_html(results)		
 
 	#meta information
 	class Meta:
@@ -4078,7 +4080,6 @@ class TranscriptionUnit(Molecule):
 				{'verbose_name': 'Sequence', 'name': 'sequence'},
 				]}),	
 			('Expression', {'fields': [
-				'transcription_rate',
 				{'verbose_name': 'Regulation', 'name': 'transcriptional_regulations'},
 				]}),
 			('Function', {'fields': [
@@ -4094,7 +4095,6 @@ class TranscriptionUnit(Molecule):
 			'type', 
 			'chromosome', 'genes', 'promoter_35_coordinate', 'promoter_35_length', 'pribnow_box_coordinate', 'pribnow_box_length', 
 			'coordinate', 'length', 'direction',
-			'transcription_rate', 
 			'comments',
 			'references', 
 			'created_user', 'created_date', 'last_updated_user', 'last_updated_date', 
