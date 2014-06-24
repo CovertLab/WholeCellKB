@@ -2820,7 +2820,7 @@ class ProteinMonomer(Protein):
 	is_n_terminal_methionine_cleaved = ForeignKey(EntryBooleanData, verbose_name='Is N-terminal methionine cleaved', related_name='+')
 	localization = ForeignKey(Localization, blank=True, null=True, related_name='protein_monomers', on_delete=SET_NULL, verbose_name='Localization')
 	domains = ManyToManyField(ProteinDomain, blank=True, null=True, related_name='protein_monomers', verbose_name='Domains')
-	copy_number = ForeignKey(CopyNumber, blank=True, null=True, on_delete=SET_NULL, verbose_name='Copy number', related_name='+')
+	copy_number = ForeignKey(CopyNumber, blank=True, null=True, on_delete=SET_NULL, verbose_name='Copy number (molecules)', related_name='+')
 	translation_rate = ForeignKey(EntryPositiveFloatData, blank=True, null=True, on_delete=SET_NULL, verbose_name='Translation rate', related_name='+')
 	half_life = ForeignKey(EntryPositiveFloatData, blank=True, null=True, on_delete=SET_NULL, verbose_name='Half life (min)', related_name='+')
 
@@ -3137,7 +3137,7 @@ class Rna(Molecule):
 	coordinate = IntegerField(null=True, blank=True, verbose_name='Coordinate (nt)')
 	length = PositiveIntegerField(verbose_name='Length (nt)')
 	direction = CharField(max_length=10, choices=CHOICES_DIRECTION, verbose_name='Direction')	
-	copy_number = ForeignKey(EntryPositiveFloatData, null=True, blank=True, on_delete=SET_NULL, verbose_name='Copy number (rel)', related_name='+')	
+	copy_number = ForeignKey(EntryPositiveFloatData, null=True, blank=True, on_delete=SET_NULL, verbose_name='Copy number (molecules)', related_name='+')	
 	half_life = ForeignKey(EntryPositiveFloatData, blank=True, null=True, on_delete=SET_NULL, verbose_name='Half life (min)', related_name='+')
 	
 	#getters
