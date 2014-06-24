@@ -1,6 +1,9 @@
 #compiled files
 *.pyc
 
+#compile doc
+static/public/doc
+
 #apache access
 *.htaccess
 
@@ -19,3 +22,6 @@ static/public/data/*
 
 #log
 log/*
+
+#tmp
+apache/tmp
