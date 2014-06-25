@@ -16,7 +16,7 @@ from django.core.urlresolvers import reverse
 from django.db.models import Count, Sum, Avg, Q
 from django.db.models.fields import BooleanField, NullBooleanField, AutoField, BigIntegerField, DecimalField, FloatField, IntegerField, PositiveIntegerField, PositiveSmallIntegerField, SmallIntegerField
 from django.db.models.fields.related import OneToOneField, RelatedObject, ManyToManyField, ForeignKey
-from django.db.models.query import EmptyQuerySet
+from django.db.models.query import EmptyQuerySet, ValuesQuerySet
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.utils.text import capfirst
@@ -318,6 +318,23 @@ def index(request, species_wid=None):
 		sources['evidence_media'] = models.Evidence.objects.filter(species_component__species__id = species.id).values('media').annotate(count = Count('id'))
 		sources['evidence_pH'] = models.Evidence.objects.filter(species_component__species__id = species.id).values('pH').annotate(count = Count('id'))
 		sources['evidence_temperature'] = models.Evidence.objects.filter(species_component__species__id = species.id).values('temperature').annotate(count = Count('id'))
+		
+	for type in ['species', 'media', 'pH', 'temperature']:
+		cats = sources['evidence_' + type]
+		
+		tot = 0
+		for cat in cats:
+			tot += cat['count']
+			
+		cats = cats.filter(count__gt=sources['total'] / 20)
+		
+		otherTot = tot
+		for cat in cats:
+			otherTot -= cat['count']
+		if otherTot > 0:
+			cats._result_cache.append({type: 'Other', 'count': otherTot})
+		
+		sources['evidence_' + type] = cats
 			
 	return render_queryset_to_response(
 		request = request, 
