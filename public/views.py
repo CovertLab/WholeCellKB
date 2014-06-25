@@ -336,7 +336,7 @@ def about(request, species_wid=None):
 		request = request, 
 		templateFile = 'public/about.html', 
 		data = {
-			'ROOT_URL': settings.ROOT_URL,
+			'FULL_URL': settings.FULL_URL,
 		}
 	)	
 		
@@ -1391,7 +1391,7 @@ def sitemap(request):
 		request = request, 
 		templateFile = 'public/sitemap.xml', 
 		data = {
-			'ROOT_URL': settings.ROOT_URL,
+			'BASE_URL': settings.BASE_URL,
 			'qs_species': Species.objects.all(),
 		}
 	)
@@ -1401,7 +1401,7 @@ def sitemap_toplevel(request):
 		request = request, 
 		templateFile = 'public/sitemap_toplevel.xml', 
 		data = {
-			'ROOT_URL': settings.ROOT_URL,
+			'BASE_URL': settings.BASE_URL,
 		}
 	)
 	
@@ -1411,7 +1411,7 @@ def sitemap_species(request, species_wid):
 		request = request, 
 		templateFile = 'public/sitemap_species.xml', 
 		data = {
-			'ROOT_URL': settings.ROOT_URL,
+			'BASE_URL': settings.BASE_URL,
 			'species': species,
 			'entries': SpeciesComponent.objects.filter(species__id = species.id),
 		}

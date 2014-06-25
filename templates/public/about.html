@@ -169,17 +169,17 @@ WholeCellKB separately versions each entry. Each entry's page displays two prope
 <p>WholeCellKB is also accessible via a RESTful API which mirrors the content of every HTML page in Bib, JSON, PDF, and XML formats. See <a href="#downloading_content">below</a> for further information about the available export formats. Please use the following URL patterns to access the API with the <span class="variable">format</span> query argument set to one of "bib", "json", "pdf", or "xml".
 <ul class="restful-examples">
 <li>Individual entries:
-	<br/>{{ ROOT_URL }}/detail/<span class="variable">SpeciesWID</span>/<span class="variable">EntryWID</span>?format=<span class="variable">Format</span>
-	<br/><a href="{{ ROOT_URL }}/detail/{{ species.wid }}/AtpA?format=json">{{ ROOT_URL }}/detail/{{ species.wid }}/ATP?format=json</a></li>
+	<br/>{{ FULL_URL }}/detail/<span class="variable">SpeciesWID</span>/<span class="variable">EntryWID</span>?format=<span class="variable">Format</span>
+	<br/><a href="{{ FULL_URL }}/detail/{{ species.wid }}/AtpA?format=json">{{ FULL_URL }}/detail/{{ species.wid }}/ATP?format=json</a></li>
 <li>Lists of entries:
-	<br/>{{ ROOT_URL }}/list/<span class="variable">SpeciesWID</span>/<span class="variable">EntryType</span>?format=<span class="variable">Format</span>
-	<br/><a href="{{ ROOT_URL }}/list/{{ species.wid }}/Reaction?format=json">{{ ROOT_URL }}/list/{{ species.wid }}/Reaction?format=json</a></li>
+	<br/>{{ FULL_URL }}/list/<span class="variable">SpeciesWID</span>/<span class="variable">EntryType</span>?format=<span class="variable">Format</span>
+	<br/><a href="{{ FULL_URL }}/list/{{ species.wid }}/Reaction?format=json">{{ FULL_URL }}/list/{{ species.wid }}/Reaction?format=json</a></li>
 <li>Complete knowledge bases:
-	<br/>{{ ROOT_URL }}/export/<span class="variable">SpeciesWID</span>?all_model_types=True&format=<span class="variable">Format</span>
-	<br/><a href="{{ ROOT_URL }}/export/{{ species.wid }}?all_model_types=True&format=json">{{ ROOT_URL }}/export/{{ species.wid }}/?all_model_types=True&format=json</a></li>
+	<br/>{{ FULL_URL }}/export/<span class="variable">SpeciesWID</span>?all_model_types=True&format=<span class="variable">Format</span>
+	<br/><a href="{{ FULL_URL }}/export/{{ species.wid }}?all_model_types=True&format=json">{{ FULL_URL }}/export/{{ species.wid }}/?all_model_types=True&format=json</a></li>
 <li>Full-text searches:
-	<br/>{{ ROOT_URL }}/search/<span class="variable">SpeciesWID</span>?q=<span class="variable">QueryString</span>&format=<span class="variable">Format</span>
-	<br/><a href="{{ ROOT_URL }}/search/{{ species.wid }}?q=ATP&format=json">{{ ROOT_URL }}/search/{{ species.wid }}/?q=ATP&format=json</a></li>
+	<br/>{{ FULL_URL }}/search/<span class="variable">SpeciesWID</span>?q=<span class="variable">QueryString</span>&format=<span class="variable">Format</span>
+	<br/><a href="{{ FULL_URL }}/search/{{ species.wid }}?q=ATP&format=json">{{ FULL_URL }}/search/{{ species.wid }}/?q=ATP&format=json</a></li>
 </ul>
 </p>
 
@@ -215,7 +215,7 @@ WholeCellKB separately versions each entry. Each entry's page displays two prope
 </div>
 
 <div><h2><a name="editing"></a>Editing WholeCellKB</h2>
-<p>We welcome additions and corrections to the version of WholeCellKB at <a href="{{ ROOT_URL }}">{{ ROOT_URL }}</a>. Click the <img src="{% get_static_prefix %}public/img/pencil.png" class="inline-icon" alt="pencil"/> icon located at the bottom-right corner of most pages to email us additions and corrections to WholeCellKB.</p>
+<p>We welcome additions and corrections to the version of WholeCellKB at <a href="{{ FULL_URL }}">{{ FULL_URL }}</a>. Click the <img src="{% get_static_prefix %}public/img/pencil.png" class="inline-icon" alt="pencil"/> icon located at the bottom-right corner of most pages to email us additions and corrections to WholeCellKB.</p>
 
 <p>Alternatively, you can download the WholeCellKB source code and content to create and customize &ndash; including the content, data model, and user interface &ndash; your own model organism database. After you've installed and logged into your own version of WholeCellKB, the <img src="{% get_static_prefix %}public/img/pencil.png" class="inline-icon" alt="pencil"/> icons will direct you to web-forms which will enable to you to edit your model organism databases. Additionally, after you've logged in you will have access to a <a href="{% if species %}{% url public.views.importData species_wid=species.wid %}{% else %}{% url public.views.importData %}{% endif %}">batch upload page</a> which will enable you to use the WholeCellKB Excel interface to more rapidly edit your model organism databases.</p>
 

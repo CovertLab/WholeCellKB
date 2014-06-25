@@ -10,14 +10,14 @@ Last updated: 2012-07-17
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 	<!-- species home page -->
 	<url>
-		<loc>{{ ROOT_URL }}{{ species.get_absolute_url }}</loc> 
+		<loc>{{ BASE_URL }}{{ species.get_absolute_url }}</loc> 
 		<lastmod>{{ species.last_updated_date|set_time_zone|date:"c" }}</lastmod>
 	</url>
 	
 	<!-- species browse -->
 	{% for model_name in modelnames %}
 	<url>
-		<loc>{{ ROOT_URL }}{% url public.views.list species_wid=species.wid model_type=model_name %}</loc> 
+		<loc>{{ BASE_URL }}{% url public.views.list species_wid=species.wid model_type=model_name %}</loc> 
 		<lastmod>{{ species.last_updated_date|set_time_zone|date:"c" }}</lastmod>
 	</url>
 	{% endfor %}
@@ -25,7 +25,7 @@ Last updated: 2012-07-17
 	<!-- species entries -->
 	{% for entry in entries %}
 	<url>
-		<loc>{{ ROOT_URL }}{{ entry.get_absolute_url }}</loc> 
+		<loc>{{ BASE_URL }}{{ entry.get_absolute_url }}</loc> 
 		<lastmod>{{ entry.last_updated_date|set_time_zone|date:"c" }}</lastmod>
 	</url>
 	{% endfor %}

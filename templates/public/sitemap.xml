@@ -12,13 +12,13 @@ Last updated: 2012-07-17
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 	<!-- top level -->
 	<sitemap>
-		<loc>{{ ROOT_URL }}{% url public.views.sitemap_toplevel %}</loc>
+		<loc>{{ BASE_URL }}{% url public.views.sitemap_toplevel %}</loc>
 	</sitemap>
 	
 	<!-- species !-->
 	{% for specie in qs_species %}
 	<sitemap>
-		<loc>{{ ROOT_URL }}{% url public.views.sitemap_species species_wid=specie.wid %}</loc>
+		<loc>{{ BASE_URL }}{% url public.views.sitemap_species species_wid=specie.wid %}</loc>
 		<lastmod>{{ specie.last_updated_date|set_time_zone|date:"c" }}</lastmod>
 	</sitemap>
 	{% endfor %}

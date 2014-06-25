@@ -8,12 +8,14 @@ Last updated: 2012-07-17
 
 import os
 
-ROOT_URL = 'http://covertlab.stanford.edu/projects/WholeCell-Mpn/kb'
+BASE_URL = 'http://www.wholecell.org'
+ROOT_URL = '/mpn/kb'
+FULL_URL = BASE_URL + ROOT_URL
 ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
-MODEL_CODE_BASE_DIR = '/home/projects/WholeCell-Mpn/sim'
+MODEL_CODE_BASE_DIR = '/home/wholecell/wholecell-mpn/sim'
 GOOGLE_SEARCH_ENABLED = False
 
-DEBUG = True
+DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
@@ -32,6 +34,8 @@ DATABASES = {
         'PORT': '',
     }
 }
+
+ALLOWED_HOSTS = ['wholecelldb.org', 'www.wholecelldb.org']
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
