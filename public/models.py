@@ -366,12 +366,17 @@ def parse_regulatory_rule(equation, all_obj_data, species_wid):
 		raise ValidationError({'regulatory_rule': 'Invalid regulatory rule'})
 
 	#if no further substructure
-	if len(blocks) == 1:	
+	if len(blocks) == 1:
+		try:
+			floatVal = float(blocks[0])
+		except ValueError:
+			floatVal = None
+	
 		if '(' in blocks[0]:
 			raise ValidationError({'regulatory_rule': 'Invalid regulatory rule'})
 		elif '!' in blocks[0]:
 			raise ValidationError({'regulatory_rule': 'Invalid regulatory rule'})
-		elif blocks[0].isnumeric() or blocks[0] in ["true", "false"]:
+		elif floatVal is not None or blocks[0] in ["true", "false"]:
 			return pattern % (pre + ' '.join([block + ' ' + post for block, post in zip(blocks, posts)]))
 			
 		wid = blocks[0]
